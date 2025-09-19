@@ -2,7 +2,7 @@
 title: "An informative title for your assignment"
 author: |
   | Name 1 (xx%), Name 2 (xx%)
-  | Name 3 (xx%), Name 4 (xx%)
+  | Name 3 (xx%), Nicolas Gonzalez (100%)
 date: "Month, 2024"
 header-includes:
   - \usepackage{booktabs}
@@ -14,7 +14,6 @@ editor_options:
   chunk_output_type: inline
 urlcolor: blue
 linkcolor: red
-bibliography: references.bib
 ---
 
 # Introduction
@@ -23,7 +22,7 @@ This is a template that you can use for your assignment report. Note that you ar
 
 # 1. Header 1
 
-Text for under header 1.
+Regression model.
 
 # 2. Header 2
 
