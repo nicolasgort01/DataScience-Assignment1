@@ -1,32 +1,122 @@
 ---
-title: "An informative title for your assignment"
+title: "We need to find a good title guysss"
 author: |
-  | Name 1 (xx%), Name 2 (xx%)
-  | Name 3 (xx%), Nicolas Gonzalez (100%)
-date: "Month, 2024"
+  Maya Archer (25 %), Saumnya (25 %),  
+  Rishi Ashok Kumar 560527 (25 %), Nicolas Gonzalez 780037 (25%)
+date: "September, 2025"
+subtitle: FEM11149 - Introduction to Data Science
+output: pdf_document
 header-includes:
   - \usepackage{booktabs}
   - \usepackage{makecell}
-output:
-  pdf_document:
-subtitle: FEM11149 - Introduction to Data Science
-editor_options:
+editor_options: 
   chunk_output_type: inline
 urlcolor: blue
 linkcolor: red
 ---
 
-# Introduction
+# 1. Introduction
 
-This is a template that you can use for your assignment report. Note that you are not supposed to change the layout (margins, font size). Check Canvas for tips on how to write reports in RMarkdown and check the assignment requirements.
+Economic growth is a central concern for governments worldwide, especially when planning to increase public spending that may require external borrowing. Since borrowed funds must eventually be repaid, it is crucial to ensure that the economy grows at a sustainable pace. A commonly used indicator for this purpose is the **Gross Domestic Product (GDP) growth rate**, which provides a measure of how rapidly an economy is expanding over time.  In this project, we work as part of a **data science consulting team** for governmental agencies. One of the agencies has tasked us with investigating whether a country’s GDP growth can be predicted using a combination of **economic and demographic variables**. 
+ 
 
-# 1. Header 1
+```{r Libraries and data loading., include=FALSE}
+library(rio)
+library(tidyverse)
+library(ggplot2)
+library(car)
+options(scipen = 999)
+rm(list = ls())
 
-Regression model.
+# Importing Data
+df <- import("Data/a1_data_group_9.csv")
+```
 
-# 2. Header 2
+```{r Data Cleaning and sanity checks, include=FALSE}
+# Variable Selection and Renaming
+df1 <- df %>% 
+  select(`Access to electricity (% of population)`, 
+         `Age dependency ratio (% of working-age population)`, 
+         `Contributing family workers, total (% of total employment) (modeled ILO estimate)`, 
+         `Employers, total (% of total employment) (modeled ILO estimate)`, 
+         `Employment in industry (% of total employment) (modeled ILO estimate)`, 
+         `Employment in services (% of total employment) (modeled ILO estimate)`, 
+         `GDP growth (annual %)`, 
+         `Individuals using the Internet (% of population)`, 
+         `Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)`, 
+         `Own-account workers, total (% of male employment) (modeled ILO estimate)`,  
+         `Population ages 15-64 (% of total)`, 
+         `Population growth (annual %)`, 
+         `Tax payments (number)`, 
+         `Urban population (% of total)`,  
+         `Net trade in goods and services (BoP, current US$)`, 
+         `Private credit bureau coverage (% of adults)`, 
+         `Public credit registry coverage (% of adults)`) %>% 
+  rename(
+    electricity_access   = `Access to electricity (% of population)`,
+    age_dependency_ratio = `Age dependency ratio (% of working-age population)`,
+    family_workers_total = `Contributing family workers, total (% of total employment) (modeled ILO estimate)`,
+    employers_total      = `Employers, total (% of total employment) (modeled ILO estimate)`,
+    gdp_growth           = `GDP growth (annual %)`,
+    internet_users       = `Individuals using the Internet (% of population)`,
+    lfpr_total           = `Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)`,
+    own_account_total    = `Own-account workers, total (% of male employment) (modeled ILO estimate)`,
+    pop_15_64_pct        = `Population ages 15-64 (% of total)`,
+    pop_growth           = `Population growth (annual %)`,
+    tax_payments_num     = `Tax payments (number)`,
+    urban_population_pct = `Urban population (% of total)`,
+    net_trade            = `Net trade in goods and services (BoP, current US$)`,
+    credit_coverage_private = `Private credit bureau coverage (% of adults)`,
+    credit_coverage_public = `Public credit registry coverage (% of adults)`
+  )
 
-Text for under header 2. The code below does not appear in the compiled pdf and is not evaluated because of the options `echo = FALSE` and `eval = FALSE`, respectively.
+str(df1)
+
+colSums(is.na(df1))
+```
+
+# Data 
+
+For this purpose, we rely on the **Global Jobs Indicators Database from the World Bank**, which provides extensive country-level data on employment, trade, demographics, and development indicators. The dataset we use (`a1_data_group_x.csv`) contains **150 observations** (countries) and **74 variables**, including the variable of interest: GDP growth.
+
+After some data exploration, we decided to 
+```{r Data Information , include= FALSE}
+
+colnames(df)
+
+```
+
+# Results.
+
+
+```{r Regression with and Without, echo=FALSE}
+fit_with <- lm(
+  gdp_growth ~ electricity_access + age_dependency_ratio +
+    family_workers_total + employers_total + internet_users +
+    lfpr_total + own_account_total + pop_15_64_pct +
+    pop_growth + tax_payments_num + urban_population_pct +
+    net_trade + credit_coverage_private + credit_coverage_public,
+  data = df1,
+  singular.ok = FALSE
+)
+
+# Model without Net Trade
+fit_without <- update(fit_with, . ~ . - net_trade)
+
+# Compare models
+anova(fit_without, fit_with)
+
+# Check multicollinearity
+vif(fit_with)
+```
+
+# Methods. 
+
+# Results.
+
+# Conclusion and Discussion. 
+
+# Code. 
 
 ```{r, echo = FALSE, eval = FALSE, warning = FALSE, message = FALSE}
 # Directory setup
@@ -63,4 +153,3 @@ You might need more sections than three.
 
 
 # References
-

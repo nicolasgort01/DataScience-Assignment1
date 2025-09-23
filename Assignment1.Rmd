@@ -1,0 +1,453 @@
+---
+title: "We need to find a good title guysss"
+author: |
+  Maya Archer (25 %), Saumnya (25 %),  
+  Rishi Ashok Kumar 560527 (25 %), Nicolas Gonzalez 780037 (25%)
+date: "September, 2025"
+subtitle: FEM11149 - Introduction to Data Science
+output: pdf_document
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{makecell}
+editor_options: 
+  chunk_output_type: inline
+urlcolor: blue
+linkcolor: red
+---
+
+# 1. Introduction
+
+Economic growth is a central concern for governments worldwide, especially when planning to increase public spending that may require external borrowing. Since borrowed funds must eventually be repaid, it is crucial to ensure that the economy grows at a sustainable pace. A commonly used indicator for this purpose is the **Gross Domestic Product (GDP) growth rate**, which provides a measure of how rapidly an economy is expanding over time.  In this project, we work as part of a **data science consulting team** for governmental agencies. One of the agencies has tasked us with investigating whether a country’s GDP growth can be predicted using a combination of **economic and demographic variables**. 
+ 
+
+```{r Libraries and data loading., include=FALSE}
+library(rio)
+library(tidyverse)
+library(ggplot2)
+library(car)
+library(glmnet)
+library(elasticnet)
+library(psych)
+library(caret)
+ 
+set.seed(111)
+options(scipen = 999)
+rm(list = ls())
+
+# Importing Data
+df <- import("Data/a1_data_group_9.csv")
+
+library(dplyr)
+
+data_clean <- df %>%
+  rename(
+    country                = `Country`,
+    electricity_access     = `Access to electricity (% of population)`,
+    adolescent_fertility   = `Adolescent fertility rate (births per 1,000 women ages 15-19)`,
+    age_dependency_ratio   = `Age dependency ratio (% of working-age population)`,
+    contrib_family_fem     = `Contributing family workers, female (% of female employment) (modeled ILO estimate)`,
+    contrib_family_male    = `Contributing family workers, male (% of male employment) (modeled ILO estimate)`,
+    contrib_family_total   = `Contributing family workers, total (% of total employment) (modeled ILO estimate)`,
+    credit_info_index      = `Depth of credit information index (0=low to 8=high)`,
+    employers_fem          = `Employers, female (% of female employment) (modeled ILO estimate)`,
+    employers_male         = `Employers, male (% of male employment) (modeled ILO estimate)`,
+    employers_total        = `Employers, total (% of total employment) (modeled ILO estimate)`,
+    emp_agriculture_total  = `Employment in agriculture (% of total employment) (modeled ILO estimate)`,
+    emp_agriculture_fem    = `Employment in agriculture, female (% of female employment) (modeled ILO estimate)`,
+    emp_agriculture_male   = `Employment in agriculture, male (% of male employment) (modeled ILO estimate)`,
+    emp_industry_total     = `Employment in industry (% of total employment) (modeled ILO estimate)`,
+    emp_industry_fem       = `Employment in industry, female (% of female employment) (modeled ILO estimate)`,
+    emp_industry_male      = `Employment in industry, male (% of male employment) (modeled ILO estimate)`,
+    emp_services_total     = `Employment in services (% of total employment) (modeled ILO estimate)`,
+    emp_services_fem       = `Employment in services, female (% of female employment) (modeled ILO estimate)`,
+    emp_services_male      = `Employment in services, male (% of male employment) (modeled ILO estimate)`,
+    export_value_index     = `Export value index (2000 = 100)`,
+    export_volume_index    = `Export volume index (2000 = 100)`,
+    fertility_rate_total   = `Fertility rate, total (births per woman)`,
+    broadband_subs         = `Fixed broadband Internet subscribers (per 100 people)`,
+    gdp_growth             = `GDP growth (annual %)`,
+    gdp_pc_const2005       = `GDP per capita (constant 2005 US$)`,
+    gdp_pc_ppp             = `GDP per capita, PPP (constant 2011 international $)`,
+    internet_users         = `Individuals using the Internet (% of population)`,
+    lfpr_fem               = `Labor force participation rate, female (% of female population ages 15+) (modeled ILO estimate)`,
+    lfpr_male              = `Labor force participation rate, male (% of male population ages 15+) (modeled ILO estimate)`,
+    lfpr_total             = `Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)`,
+    labor_force_total      = `Labor force, total`,
+    life_exp_fem           = `Life expectancy at birth, female (years)`,
+    life_exp_male          = `Life expectancy at birth, male (years)`,
+    mobile_subs            = `Mobile cellular subscriptions (per 100 people)`,
+    own_account_fem        = `Own-account workers, female (% of female employment) (modeled ILO estimate)`,
+    own_account_male       = `Own-account workers, male (% of male employment) (modeled ILO estimate)`,
+    own_account_total      = `Own-account workers, total (% of male employment) (modeled ILO estimate)`,
+    pop_0_14_pct           = `Population ages 0-14 (% of total)`,
+    pop_0_14_total         = `Population ages 0-14, total`,
+    pop_15_64_pct          = `Population ages 15-64 (% of total)`,
+    pop_15_64_total        = `Population ages 15-64, total`,
+    pop_65plus_pct         = `Population ages 65 and above (% of total)`,
+    pop_65plus_total       = `Population ages 65 and above, total`,
+    pop_density            = `Population density (people per sq. km of land area)`,
+    pop_growth             = `Population growth (annual %)`,
+    pop_total              = `Population, total`,
+    credit_coverage_priv   = `Private credit bureau coverage (% of adults)`,
+    credit_coverage_pub    = `Public credit registry coverage (% of adults)`,
+    rural_pop_total        = `Rural population`,
+    rural_pop_pct          = `Rural population (% of total population)`,
+    self_emp_fem           = `Self-employed, female (% of female employment) (modeled ILO estimate)`,
+    self_emp_male          = `Self-employed, male (% of male employment) (modeled ILO estimate)`,
+    self_emp_total         = `Self-employed, total (% of total employment) (modeled ILO estimate)`,
+    tax_payments_num       = `Tax payments (number)`,
+    telephone_lines        = `Telephone lines (per 100 people)`,
+    contract_days          = `Time required to enforce a contract (days)`,
+    start_business_days    = `Time required to start a business (days)`,
+    tax_prep_hours         = `Time to prepare and pay taxes (hours)`,
+    unemp_fem              = `Unemployment, female (% of female labor force) (modeled ILO estimate)`,
+    unemp_male             = `Unemployment, male (% of male labor force) (modeled ILO estimate)`,
+    unemp_total            = `Unemployment, total (% of total labor force) (modeled ILO estimate)`,
+    unemp_youth_fem        = `Unemployment, youth female (% of female labor force ages 15-24) (modeled ILO estimate)`,
+    unemp_youth_male       = `Unemployment, youth male (% of male labor force ages 15-24) (modeled ILO estimate)`,
+    unemp_youth_total      = `Unemployment, youth total (% of total labor force ages 15-24) (modeled ILO estimate)`,
+    urban_pop_total        = `Urban population`,
+    urban_pop_pct          = `Urban population (% of total)`,
+    vulner_emp_fem         = `Vulnerable employment, female (% of female employment) (modeled ILO estimate)`,
+    vulner_emp_male        = `Vulnerable employment, male (% of male employment) (modeled ILO estimate)`,
+    vulner_emp_total       = `Vulnerable employment, total (% of total employment) (modeled ILO estimate)`,
+    waged_emp_fem          = `Wage and salaried workers, female (% of female employment) (modeled ILO estimate)`,
+    waged_emp_male         = `Wage and salaried workers, male (% of male employment) (modeled ILO estimate)`,
+    waged_emp_total        = `Wage and salaried workers, total (% of total employment) (modeled ILO estimate)`,
+    net_trade              = `Net trade in goods and services (BoP, current US$)`
+  ) %>% 
+  mutate(
+    log_net_trade_signed = sign(net_trade) * log1p(abs(net_trade)),
+    pop_growth_sq = pop_growth^2,
+  )
+
+colnames(data_clean)
+```
+
+```{r Data Cleaning and sanity checks, include=FALSE}
+# Variable Selection
+
+dfm1 <- data_clean %>% 
+  select(gdp_growth, 
+         electricity_access, 
+         employers_total, 
+         pop_total,
+         pop_growth,
+         pop_growth_sq,
+         labor_force_total,
+         lfpr_total,
+         vulner_emp_total,
+         credit_coverage_priv,
+         credit_coverage_pub,
+         life_exp_male)
+
+
+
+# Check for data inbalance. 
+dfm1 %>%
+  select(where(is.numeric)) %>%
+  pivot_longer(everything(), names_to = "variable", values_to = "value") %>%
+  ggplot(aes(x = value)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "white") +
+  facet_wrap(~ variable, scales = "free") +
+  theme_minimal()
+```
+
+# 2. Data
+Our analysis uses the **Global Jobs Indicators Database (World Bank)**. From the available variables, we selected a subset grouped as follows:  
+- **Demographics & human capital**: population growth, population density, and male life expectancy at birth.  
+- **Labor market**: labor force participation rate, unemployment rate, and employers’ share of total employment.  
+- **External sector**: net trade in goods and services, export value index.  
+- **Financial development**: private credit bureau coverage.  
+- **Development level (controls)**: GDP per capita (PPP, constant 2011 international $).  
+
+
+We also created transformed variables: *signed log of net trade*, *population growth squared*. These account for nonlinearities, while keeping the model interpretable.
+
+We also saw that our variables where very unbalanced, so we decided to transfrorm them into a log scale. 
+
+
+
+```{r Data Information , include= FALSE}
+
+colnames(dfm1)
+
+```
+
+# 3. Results.
+
+
+```{r Regression with and Without, echo=FALSE, include=FALSE}
+# With Net Trade
+
+dfm2 <- data_clean %>% 
+  select(gdp_growth, 
+         electricity_access, 
+         employers_total, 
+         pop_total,
+         pop_growth,
+         pop_growth_sq,
+         labor_force_total,
+         lfpr_total,
+         vulner_emp_total,
+         credit_coverage_priv,
+         life_exp_male,
+         pop_density,
+         net_trade) %>% 
+  mutate(
+         electricity_access_log = log(electricity_access),
+         employers_total_log = log(employers_total),
+         pop_total_log = log(pop_total),
+         labor_force_total_log = log(labor_force_total),
+         vulner_emp_total_log = log(vulner_emp_total),
+         life_exp_male_log = log(life_exp_male)
+         ) %>% 
+  drop_na()
+
+
+fit_with <- lm(
+  gdp_growth ~ 
+    electricity_access_log +
+    employers_total_log +
+    pop_total_log +
+    labor_force_total_log +
+    vulner_emp_total_log +
+    credit_coverage_priv +
+    life_exp_male_log +
+    pop_growth +
+    net_trade +
+    pop_density,
+  data = dfm2,
+  singular.ok = FALSE
+)
+
+summary(fit_with)
+
+# Modelo sin Net Trade
+fit_without <- update(fit_with, . ~ . - net_trade)
+
+summary(fit_without)
+
+# Comparación formal entre modelos
+anova(fit_without, fit_with)
+
+# Verificación de multicolinealidad
+library(car)
+vif(fit_with)
+```
+
+At first, we wanted to test whether including **net trade in goods and services** would improve the explanatory power of our GDP growth model. When **net trade** was included, its coefficient was essentially zero and statistically insignificant ($p \approx 0.93$). Moreover, the **Adjusted R²** decreased slightly (0.137 without vs. 0.131 with), suggesting that the variable adds noise rather than explanatory value. The ANOVA test comparing the two models confirmed that net trade does not significantly improve model fit ($p \approx 0.92$).  
+
+Therefore, we conclude that **net trade should not be included** in the final model. Instead, the variables that consistently show significant relationships with GDP growth are *Employers, total (% of employment)* (negative and highly significant), *Export value index* (positive and significant), *Life expectancy at birth, male* (positive and significant), and *GDP per capita, PPP (constant 2011 international $)* (negative and significant). Other controls, such as unemployment, labor force participation, credit coverage, and population dynamics, do not show significant effects in this specification.
+
+```{r Extended Model, include= FALSE}
+
+ fit_extended <- lm(
+  gdp_growth ~ 
+    net_trade +
+    export_index +
+    employers_pct +
+    unemployment +
+    life_exp_male +
+    credit_coverage +
+    gdp_pc_ppp +
+    pop_growth +
+    lfpr +
+    pop_density+
+    log_net_trade_signed+
+    pop_growth_sq,
+  
+  data = dfm1,
+  singular.ok = FALSE
+)
+
+summary(fit_extended)
+```
+Additionally, we added two transformations to test for nonlinearities: a signed log of net trade (`log_net_trade_signed`) to allow for diminishing returns and preserve the deficit/surplus sign, and a quadratic term in population growth (`pop_growth_sq`) to capture potential U- or inverted-U-shaped demographic effects. In the augmented model, neither coefficient is statistically significant (`log_net_trade_signed`: $p \approx 0.25$; `pop_growth_sq`: $p \approx 0.80$), and overall fit does not improve (Adjusted R² falls from $\approx 0.131$ without the terms to $\approx 0.127$ with them). Baseline **net trade** also remains insignificant ($p \approx 0.72$). By contrast, the **export value index** (positive), **employers' share** (negative), **male life expectancy** (positive), and **GDP per capita (PPP)** (negative) remain significant and stable.
+
+```{r Penalized Regression using LASSO.}
+
+n1 <- 110
+idx <- sample(1:nrow(dfm1), n1)
+
+dfm_train <- dfm1[idx, ]
+dfm_test <- dfm1[-idx, ]
+
+x <- dfm_train %>%
+  select(!gdp_growth)
+
+y = dfm_train$gdp_growth
+
+fitControl <- trainControl(method =  'repeatedcv', number = 10, repeats = 5 )
+
+library(caret)
+library(glmnet)
+
+# x should be your predictors matrix, y your GDP growth vector
+
+lasso <- train(
+  x = as.matrix(x),
+  y = y,
+  method = "glmnet",
+  family = "gaussian",  # continuous outcome
+  preProcess = c("center", "scale"),
+  tuneGrid = expand.grid(
+    alpha  = 1,                           # LASSO penalty
+    lambda = 10^seq(-4, 2, length.out=100) # lambda grid (positive)
+  ),
+  trControl = fitControl
+)
+
+lasso
+plot(lasso)
+
+
+help('train')
+plot(lasso)
+lasso
+
+library(dplyr)
+
+# See best Lambda
+lam <- lasso$bestTune$lambda
+lam
+
+# Coefficientes for the Lamda.
+b <- coef(lasso$finalModel, s = lam)  # matriz dispersa
+coefs <- as.matrix(b)
+
+df_coef <- data.frame(
+  variable = rownames(coefs),
+  beta = coefs[, 1],
+  row.names = NULL
+) %>%
+  filter(variable != "(Intercept)")
+
+eps <- 1e-6
+
+# Actual Variables kept and those killed.
+vars_seleccionadas <- df_coef %>% filter(abs(beta) > eps) %>% arrange(desc(abs(beta)))
+vars_matadas       <- df_coef %>% filter(abs(beta) <= eps) %>% arrange(variable)
+
+
+nrow(vars_seleccionadas)
+nrow(vars_matadas)
+
+
+```
+```{r}
+library(tidyverse)
+library(caret)
+library(glmnet)
+
+# Read data
+#stopifnot(file.exists("a1_data_group_9.csv"))
+data <- import("Data/a1_data_group_9.csv")
+ 
+# ---- Task 1 ----
+
+# model without net_trade
+model_1 <- lm(
+  gdp_growth ~ 
+    employers_total +
+    fertility_rate_total +
+    lfpr_total +
+    life_exp_male +
+    unemp_total +
+    export_value_index +
+    pop_growth +
+    gdp_pc_ppp +
+    waged_emp_total,
+  data = data_clean,
+  singular.ok = FALSE
+)
+summary(model_1)
+
+# model with net_trade
+model_2 <- lm(
+  gdp_growth ~ 
+    employers_total +
+    fertility_rate_total +
+    lfpr_total +
+    life_exp_male +
+    net_trade +
+    unemp_total +
+    export_value_index +
+    pop_growth +
+    gdp_pc_ppp +
+    waged_emp_total,
+  data = data_clean,
+  singular.ok = FALSE
+)
+summary(model_2)
+
+
+# ---- Task 2 ----
+
+# Create logged GDP per capita
+data <- data_clean %>%
+  mutate(log_gdp_pc_ppp = log(gdp_pc_ppp))
+
+# Run updated regression with log term
+model_log <- lm(
+  gdp_growth ~ 
+    employers_total +
+    age_dependency_ratio +
+    fertility_rate_total +
+    lfpr_total +
+    life_exp_male +
+    net_trade +
+    unemp_total +
+    export_value_index +
+    pop_growth +
+    log_gdp_pc_ppp +     # nonlinear effect
+    waged_emp_total,
+  data = data,
+  singular.ok = FALSE
+)
+summary(model_log)
+
+
+# ---- Task 3: LASSO ----
+
+# Prepare predictors (X) and outcome (y)
+X <- model.matrix(
+  gdp_growth ~ 
+    employers_total +
+    age_dependency_ratio +
+    fertility_rate_total +
+    lfpr_total +
+    life_exp_male +
+    net_trade +
+    unemp_total +
+    export_value_index +
+    pop_growth +
+    log(gdp_pc_ppp) +
+    waged_emp_total,
+  data = data
+)[,-1]   # drop intercept column
+
+y <- data$gdp_growth
+
+# Run lasso with cross-validation
+set.seed(123)
+cv_lasso <- cv.glmnet(X, y, alpha = 1, standardize = TRUE)
+
+# Best lambda
+cv_lasso$lambda.min
+cv_lasso$lambda.1se
+
+# Coefficients at best lambda
+coef(cv_lasso, s = "lambda.min")
+
+```
+
+
+
+# 4. Methods. 
+
+# 5. Conclusion and Discussion. 
+
+# 6. Code. 
+
+# 7. References. 
