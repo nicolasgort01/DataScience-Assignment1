@@ -342,3 +342,5 @@ en_tbl_min    <- coef_table(cv_en_best, s = cv_en_best$lambda.min,
 cat("\n=== Top coefficients (head) ===\n")
 print(head(ridge_tbl_min, 10))
 print(head(en_tbl_min, 10))
+
+
