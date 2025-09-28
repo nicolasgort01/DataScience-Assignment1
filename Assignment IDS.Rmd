@@ -185,7 +185,7 @@ df_models <- lapply(names(models), function(name) {
 }) %>% bind_rows()
 
 # --- Residuals vs Fitted plot ---
-ggplot(df_models, aes(.fitted, .resid, color = Model)) +
+gg_resfit <- ggplot(df_models, aes(.fitted, .resid, color = Model)) +
   geom_point(alpha = 0.6) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   facet_wrap(~Model) +
@@ -195,7 +195,7 @@ ggplot(df_models, aes(.fitted, .resid, color = Model)) +
   theme_minimal()
 
 # --- Normal Q-Q plot ---
-ggplot(df_models, aes(sample = .std.resid, color = Model)) +
+gg_qq <- ggplot(df_models, aes(sample = .std.resid, color = Model)) +
   stat_qq(alpha = 0.6) +
   stat_qq_line() +
   facet_wrap(~Model) +
@@ -205,7 +205,7 @@ ggplot(df_models, aes(sample = .std.resid, color = Model)) +
   theme_minimal()
 
 # --- Scale-Location plot (sqrt(|residuals|) vs fitted) ---
-ggplot(df_models, aes(.fitted, sqrt(abs(.std.resid)), color = Model)) +
+gg_scale <- ggplot(df_models, aes(.fitted, sqrt(abs(.std.resid)), color = Model)) +
   geom_point(alpha = 0.6) +
   geom_smooth(se = FALSE, color = "black") +
   facet_wrap(~Model) +
@@ -292,8 +292,6 @@ comparison <- data.frame(
   Standardization = round(coef_std[,1], 6)
 )
 
-# Pretty table
-kable(comparison[ , -1], caption = "Comparison of LASSO Coefficients With and Without Standardization")
 
 ```
 
@@ -347,8 +345,6 @@ df_1se <- data.frame(Variable = rownames(sel_1se), Coef_1se = sel_1se[,1])
 # Merge into one comparative table
 comparative_tbl <- merge(df_min, df_1se, by = "Variable", all = TRUE)
 
-# Show the table
-knitr::kable(comparative_tbl, caption = "Variables Selected under λ.min vs λ.1se")
 
 ```
 
@@ -498,10 +494,6 @@ comparative_df <- data.frame(
   ENet_min = ifelse(all_vars %in% vars_en_min, "T", "F"),
   ENet_1se = ifelse(all_vars %in% vars_en_1se, "T", "F")
 )
-
-
-# Display nicely
-knitr::kable(comparative_df, caption = "Variable selection across LASSO and Elastic Net")
 
 ```
 At first glance, it might seem enough to run a regular regression and simply remove the variables that don’t look significant. But this approach has some important problems. Standard regression struggles when variables are highly related to each other, or when there are many variables compared to the number of observations. In those cases, the estimates can jump around a lot depending on small changes in the data, which makes the model unreliable.
@@ -709,7 +701,7 @@ kable(
 
 # Appendix
 
-## Appendix A (Tables)
+## Appendix A
 
 \begin{table}[!htbp] \centering
   \caption{Comparison of OLS Models: With vs. Without Net Trade}
@@ -807,6 +799,38 @@ F Statistic & 2.967$^{***}$ (df = 12; 137) \\
 
 
 
+```{r echo=FALSE}
+
+
+# Pretty table
+kable(comparison[ , -1], caption = "Comparison of LASSO Coefficients With and Without Standardization")
+```
+
+
+
+```{r echo=FALSE}
+# Display nicely
+knitr::kable(comparative_df, caption = "Variable selection across LASSO and Elastic Net")
+```
+
+```{r echo=FALSE}
+# Show the table
+knitr::kable(comparative_tbl, caption = "Variables Selected under λ.min vs λ.1se")
+
+```
+
+
+## Appendix B
+
+```{r, echo=FALSE, fig.width=8, fig.height=5, fig.cap="Residuals vs Fitted for all specifications"}
+print(gg_resfit)
+print(gg_qq)
+print(gg_scale)
+```
+
+
+
+## Appendix C
 ```{r, echo=FALSE, results='asis'}
 code_file <- knitr::purl("Assignment IDS.rmd", quiet = TRUE)
 code <- readLines(code_file, warn = FALSE)
