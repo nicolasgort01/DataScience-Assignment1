@@ -32,8 +32,8 @@ pacman::p_load(
 options(scipen = 999)
 rm(list = ls())
 # Read data
-stopifnot(file.exists("a1_data_group_9.csv"))
-df <- readr::read_csv("a1_data_group_9.csv", show_col_types = FALSE)
+stopifnot(file.exists("Data/a1_data_group_9.csv"))
+df <- readr::read_csv("Data/a1_data_group_9.csv", show_col_types = FALSE)
 ```
 
 
@@ -505,6 +505,7 @@ Another key advantage is that penalized regression can automatically deal with s
 In short, penalized regression is not just a more complicated way of doing regression — it’s a safer and more reliable approach that helps us avoid misleading conclusions. Instead of giving us a model that only looks good on paper, it provides results that are more likely to hold up in practice, which is essential for making sound policy and business decisions.
 
 
+ 
 
 
 
@@ -575,6 +576,8 @@ results <- data.frame(
 
 print(results, row.names = FALSE)
 ```
+Additionally, we wanted to check whether some countries tend to grow faster than most others. To make that precise, we defined a binary target **Growing more** (1 if annual GDP growth **> 2.7%**, 0 otherwise) and fit logistic regression with a **Ridge** penalty, comparing the cross-validated choices $\lambda_{\min}$ and $\lambda_{1\mathrm{se}}$. As reported in **Table 3**, the $\lambda_{1\mathrm{se}}$ model outperforms $\lambda_{\min}$ on the test set—higher **Accuracy** (0.525 vs 0.475) and, more importantly, lower **LogLoss** (0.6871 vs 0.8054) and **Brier** (0.2471 vs 0.2774), with **AUC** also improving (0.563 vs 0.464).
+
 
 ```{r echo=FALSE}
 results_tbl <- results %>%
@@ -586,6 +589,11 @@ kable(results_tbl, caption = "Ridge (logistic) — Test Metrics") %>%
 ```
 
 
+When we repeat the analysis with a different train–test split (**Table 4**), performance shifts: in **Run 1**, $\lambda_{\min}$ yields better **LogLoss**, **Brier**, and **AUC** (0.6553, 0.2321, 0.619), while $\lambda_{1\mathrm{se}}$ slightly improves **Accuracy** (0.575 vs 0.525). In **Run 2**, the pattern returns to what we saw in **Table 3**, with $\lambda_{1\mathrm{se}}$ leading across metrics.
+
+This split-to-split variability—visible in **Table 4**—is exactly what we would expect with a modest sample and a threshold near many observations. Averaging the two runs in **Table 4**, $\lambda_{1\mathrm{se}}$ offers better **Accuracy** and calibration (lower **LogLoss**/**Brier**), whereas $\lambda_{\min}$ retains a slight **AUC** advantage. Taken together with **Table 3**, we favor the more regularized $\lambda_{1\mathrm{se}}$ model for its stability and better-calibrated probabilities.
+
+If we could add data, we would first prioritize **more countries (rows)** to reduce variance and stabilize results; then we would add **relevant** predictors (institutions, investment, demographics, trade exposure, external shocks) to capture more of the true drivers. Predicting **continuous GDP growth** is preferable when magnitudes matter for budgeting and scenario analysis, whereas predicting **Growing more** is more useful for threshold-based decisions where an actionable probability—“will this country exceed 2.7%?”—is exactly what is needed.
 ```{r include=FALSE}
 # Final Model and Coefficientes. 
 coef_min <- coef(cv_ridge, s = "lambda.min")
