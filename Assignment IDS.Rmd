@@ -1,9 +1,9 @@
 ---
-title: "An informative title for your assignment"
+title: "Determinants of economic growth: Insights from demographics, labor markets, and international trade"
 author: |
-  | Name 1 (xx%), Name 2 (xx%)
-  | Name 3 (xx%), Name 4 (xx%)
-date: "Month, 2024"
+  | Maya Archer 623099 (xx%), Nicolas Gonzalez Gort 780037 (xx%)
+  | Rishi Ashok Kumar 560527 (xx%), Saumya Bothra 595402 (xx%)
+date: "September, 2025"
 header-includes:
   - \usepackage{booktabs}
   - \usepackage{makecell}
@@ -18,7 +18,9 @@ linkcolor: red
 ---
 
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r include=FALSE, purl=FALSE}
+  knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
+
 # Directory setup
 path = dirname(rstudioapi::getSourceEditorContext()$path) # Path is directory of this file
 setwd(path)     # Set working directory
@@ -32,96 +34,57 @@ pacman::p_load(
 options(scipen = 999)
 rm(list = ls())
 # Read data
-stopifnot(file.exists("Data/a1_data_group_9.csv"))
-df <- readr::read_csv("Data/a1_data_group_9.csv", show_col_types = FALSE)
+df <- readr::read_csv("~/Desktop/Group Assignment 1 IDS /a1_data_group_9.csv", show_col_types = FALSE)
 ```
 
 
 
 
 ```{r include=FALSE}
-# Data Splitting. 
-set.seed(254646)
-n1 <- 110
-idx <- sample(1:nrow(df), n1)
-data_clean <- df
-dfm_train <- data_clean[idx, ]
-dfm_test <- data_clean[-idx, ]  
-Xvars_mat_train <- model.matrix(`GDP growth (annual %)` ~.-Country,data = dfm_train)[, -1]
-Yvar_train      <- dfm_train$`GDP growth (annual %)`           
-Xvars_mat_test  <- model.matrix(`GDP growth (annual %)` ~.-Country,data = dfm_test)[, -1]
-Yvar_test       <- dfm_test$`GDP growth (annual %)`  
+# Data Splitting
+set.seed(254646); n1<-110; idx<-sample(nrow(df), n1)  # draw n1 rows
+data_clean<-df; dfm_train<-data_clean[idx,]; dfm_test<-data_clean[-idx,]  # train/test
+Xvars_mat_train<-model.matrix(`GDP growth (annual %)`~.-Country, data=dfm_train)[,-1]  # drop intercept
+Yvar_train<-dfm_train$`GDP growth (annual %)`  # target train
+Xvars_mat_test<-model.matrix(`GDP growth (annual %)`~.-Country, data=dfm_test)[,-1]   # drop intercept
+Yvar_test<-dfm_test$`GDP growth (annual %)`    # target test
 ```
 
 
 # Introduction
 
-Economic growth is a central concern for policymakers, researchers, and international organizations, as it reflects a country’s capacity to expand production, improve living standards, and sustain long-term development. Forecasts of Gross Domestic Product (GDP) growth are particularly important, as they inform fiscal policy, trade negotiations, and borrowing decisions. For example, governments may finance higher expenditure through debt, but the sustainability of such debt ultimately depends on the economy’s future growth potential. Understanding the determinants of GDP growth is therefore essential for designing effective policies and ensuring financial stability.
+Economic growth is commonly defined as the sustained increase in real Gross Domestic Product (GDP), reflecting a country's ability to expand production, improve living standards, and maintain long-term development. Forecasts of Gross Domestic Product (GDP) growth are crucial for policymakers, researchers, and international organizations, as they inform fiscal policy, trade negotiations, and borrowing decisions. For instance, governments may finance higher expenditure through debt, but the sustainability of such debt ultimately depends on the economy's future growth potential. Classical models, such as Solow's growth theory, explain how long-term economic growth can be achieved through technological advancements, labor force growth, and capital accumulation. The Demographic Transition Model (DTM) describes how declining mortality and fertility rates affect population structures, which in turn impact economic growth. Meanwhile, the open-economy theory highlights international trade as a potential driver of growth. Identifying the determinants of GDP growth is important for testing existing theoretical predictions, as well as for designing effective policies that foster sustainable development and macroeconomic stability. 
 
-This raises the central research question: **To what extent can economic and demographic variables, such as trade balance, unemployment, and population characteristics, be used to predict GDP growth?** Investigating this question is significant because it clarifies the structural factors that shape economic performance and provides a foundation for more accurate forecasting. A better understanding of these relationships enables policymakers to anticipate risks, develop sustainable fiscal strategies, and allocate resources more efficiently. Crucially, it may also help mitigate resource misallocation, where funds are directed toward ineffective or low-impact policies rather than those that foster long-term growth.
-
+Building on this motivation, the central research question guiding this analysis is: **To what extent can economic and demographic variables, such as trade balance, unemployment, and population characteristics, be used to predict GDP growth?** Investigating this question is significant because it clarifies the structural factors that shape economic performance and provides a foundation for more accurate forecasting. A better understanding of these relationships enables policymakers to anticipate risks, develop sustainable fiscal strategies, and allocate resources more efficiently. It may also aid in reducing misallocation of resources, where funds are directed toward ineffective or low-impact policies rather than those that promote sustainable, long-term growth.
 
 # Data 
 
-The analysis is based on the data obtained from the *World Bank’s Global Jobs Indicators Database* and *Balance of Payments statistics*. These sources provide internationally comparable information on a wide range of economic and demographic variables that are relevant for understanding growth dynamics. The dataset used covers 150 countries and includes 73 variables capturing different aspects of economic activity, labor market conditions, trade, and demographic structure. The key variable of interest is GDP growth, which serves as the measure of economic performance. The data includes indicators such as trade balance, unemployment, net trade in goods and services, labor force participation, and population characteristics. Most of these are expressed as percentages or ratios, allowing for straightforward interpretation and comparison across countries. For example, the trade balance is measured as a share of GDP, while unemployment is expressed as a percentage of the labor force. This standardized reporting ensures consistency across countries and reduces the need for additional transformations before analysis.
+The analysis is based on the data obtained from the *World Bank’s Global Jobs Indicators Database* and *Balance of Payments statistics*. The dataset consists of 73 variables that capture information on widely used macroeconomic and demographic indicators from 150 countries. The target variable is GDP growth, a measure of economic performance. The data includes explanatory variables like trade balance, unemployment, net trade in goods and services, labor force participation, and population characteristics. Most of these are expressed as percentages or ratios, ensuring consistency and reducing the need for additional transformations prior to analysis. For example, the trade balance is measured as a share of GDP, while unemployment is expressed as a percentage of the labor force.
 
-Simple descriptive statistics illustrate the variation across economies. Average GDP growth is around 2.6%, though individual countries range from sharp contractions of over –34% to expansions above 13%. Unemployment averages 8.1%, with some countries experiencing very low rates (close to 0.2%) while others face levels above 27%. Population growth is generally positive, averaging 1.4%, but ranges from slight declines (–1.9%) to rapid expansions exceeding 5% per year.
+Simple descriptive statistics illustrate the variation across economies. On average, the annual GDP growth rate is 2.6%, but country-level outcomes vary widely, ranging from severe contractions of over –34.3% to strong expansions of more than 13%. The average unemployment rate is 8.1%, with some countries experiencing very low rates (close to 0.2%) while others face levels above 27%. Population growth is generally positive, averaging at 1.4%, but ranges from slight declines (–1.9%) to rapid expansions exceeding 5% per year.
 
-By combining macroeconomic indicators with demographic and labor market measures, the dataset provides a broad perspective on the potential drivers of GDP growth. Its cross-country coverage enables the identification of structural patterns and relationships that can inform both policy and strategic decision-making. While the dataset does not capture every possible determinant of growth, it offers a sufficiently comprehensive view to support meaningful insights into the economic and demographic factors most closely associated with growth outcomes.
-
-
+By combining macroeconomic indicators with demographic and labor market measures, the dataset offers a broad overview of the potential drivers of GDP growth. Its cross-country coverage enables the identification of structural patterns and relationships that can inform both policy and strategic decision-making. While the dataset does not capture every possible determinant of growth, it offers a sufficiently comprehensive view to support meaningful insights into the how different factors contribute to growth performance across countries. 
 
 # Methods 
 
-Regression analysis is a widely used statistical technique for examining the relationship between dependent variable and one or more explanatory variables. In its simplest form, linear regression estimates how changes in the explanatory variables are associated with changes in the outcome. This is particularly useful in economic contexts, where the goal is often to assess the impact of multiple structural and demographic factors on a country’s performance. The strength of regression analysis lies in its ability to quantify these relationships and to provide a framework for prediction. The standard approach, Ordinary Least Squares (OLS), estimates coefficients by minimizing the squared differences between observed and predicted values. OLS performs well when there are only a few explanatory variables that are relatively independent. However, when dealing with a large set of predictors or when many of them are highly correlated, several of the classical assumptions underlying OLS may be violated.
+Regression analysis is a widely used statistical technique for examining how a dependent variable changes based on one or more explanatory variables. This is particularly useful in economic contexts, where the goal is often to predict the quantitative impact of multiple structural and demographic factors on a country’s performance. The standard approach, Ordinary Least Squares (OLS), estimates coefficients by minimizing the squared differences between observed and predicted values. In its general form, an OLS regression can be expressed as $y_i = \beta_0 + \beta_1 x_{i1} + \dots + \beta_k x_{ik} + \varepsilon_i$, where $y_i$ is the dependent variable, $x_{ij}$ are the explanatory variables, $\beta_j$ are coefficients, and $\varepsilon_i$ is the error term. OLS relies on assumptions such as linearity of relationships, independence of errors, homoscedasticity (constant variance of errors), and the absence of perfect multicollinearity among explanatory variables. In practice, economic and demographic data often challenge these assumptions, leading to weakened interpretability and predictive accuracy. For example, variables such as unemployment, labor participation, and population growth may be correlated, leading to multicollinearity that inflates standard errors and undermines the reliability of coefficient estimates.
 
-OLS relies on assumptions such as linearity of relationships, independence of errors, homoscedasticity (constant variance of errors), and the absence of perfect multicollinearity among explanatory variables. In practice, economic and demographic data often challenge these assumptions. For example, variables such as unemployment, labor participation, and population growth may be correlated, leading to multicollinearity that inflates standard errors and undermines the reliability of coefficient estimates. Similarly, the assumption of homoscedasticity may be violated if countries with different income levels exhibit systematically different variances in growth rates. Violations of these assumptions do not necessarily invalidate the model, but they do weaken its interpretability and predictive accuracy, motivating the use of alternative approaches such as regularization methods.
+Penalized regression methods aim to solve this issue by adding a penalty term to the absolute size of the coefficient estimates, shrinking them towards zero. The LASSO regression (Least Absolute Shrinkage and Selection Operator) in particular uses an $L_1$ penalty, which stabilizes estimation and performs variable selection by setting some coefficients exactly to zero instead of fitting all available predictors. Mathematically, LASSO minimizes the sum of squared errors plus a penalty term, expressed as $\min_{\beta} \sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda \sum_{j=1}^p |\beta_j|$, where $\lambda$ controls the strength of the penalty. Larger values of $\lambda$ produce simpler models with fewer predictors, while smaller values allow more variables to remain in the model. Ridge regression applies an $L_2$ penalty, minimizing the sum of squared residuals plus $\lambda \sum_j \beta_j^2$, which also shrinks the coefficients towards zero but does not remove them entirely. This makes Ridge useful when dealing with many correlated predictors, as it distributes the effect across them instead of excluding variables. Elastic Net addresses this by blending the $L_1$ and $L_2$ penalties into one objective, $\min_{\beta} \sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda \left[ \alpha \sum_{j=1}^p |\beta_j| + (1-\alpha) \sum_{j=1}^p \beta_j^2 \right]$, where $\alpha \in [0,1]$ controls the balance between LASSO and Ridge. This flexibility makes Elastic Net particularly effective when predictors are highly correlated, as it can select groups of variables together while still maintaining shrinkage for stability.
 
-LASSO regression (Least Absolute Shrinkage and Selection Operator) enhances prediction by introducing a penalty on the absolute size of the coefficients. Instead of fitting all available predictors, LASSO shrinks some coefficients toward zero and can even set them exactly to zero. This property makes it particularly valuable for variable selection, as it automatically highlights the most important predictors while discarding those that contribute little to the model. Mathematically, LASSO minimizes the sum of squared errors plus a penalty term, expressed as: 
+For model diagnostics, the main concern is predictive power rather than just achieving the best in-sample fit. While the coefficient of determination ($R^2$) provides an indication of how much of the variation in the dependent variable is explained, a high $R^2$ does not necessarily indicate strong predictive accuracy. To avoid overfitting, penalized regressions rely on cross-validation, which evaluates how well the model generalizes to unseen data. The performance of each model is typically assessed using a loss function, most commonly the mean squared error (MSE) or the mean absolute error (MAE). Based on this evaluation, two values of the penalty parameter $\lambda$ are often reported: $\lambda_{min}$, which minimizes the chosen prediction error, and $\lambda_{1se}$, which selects a simpler model where its error is within one standard error of the minimum. 
 
-$$
-\min_{\beta} \sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda \sum_{j=1}^p |\beta_j|
-$$
-
-where $\lambda$ controls the strength of the penalty. Larger values of $\lambda$ produce simpler models with fewer predictors, while smaller values allow more variables to remain in the model. 
-
-Elastic Net regression combines features of both LASSO and Ridge regression. Ridge regression introduces a penalty on the squared size of coefficients, which shrinks them toward zero but never eliminates them entirely. This makes Ridge useful when dealing with many correlated predictors, as it distributes the effect across them rather than excluding variables. While LASSO excels at variable selection, it can behave inconsistently when predictors are highly correlated, often choosing one variable at random and discarding others. Elastic Net addresses this by blending the LASSO penalty with the Ridge penalty (which shrinks coefficients without setting them to zero). Its objective function is:
-
-$$
-\min_{\beta} \sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda \left[ \alpha \sum_{j=1}^p |\beta_j| + (1-\alpha) \sum_{j=1}^p \beta_j^2 \right]
-$$
-
-Here $\alpha$ determines the balance between the LASSO ($\alpha$ = 1) and Ridge ($\alpha$ = 0) penalties. This flexibility makes Elastic Net particularly effective in settings with many correlated predictors, as it can select groups of variables together while still maintaining shrinkage for stability.
-
-For model diagnostics, the key concern is predictive power rather than simply achieving the best in-sample fit. While the coefficient of determination ($R^2$) provides an indication of how much of the variation in the dependent variable is explained, a high $R^2$ does not necessarily translate into strong predictive accuracy. To avoid overfitting, penalized regressions rely on cross-validation, which evaluates how well the model generalizes to unseen data. The performance of each model is typically assessed using a loss function, most commonly the mean squared error (MSE) or the mean absolute error (MAE). Based on this evaluation, two values of the penalty parameter $\lambda$ are often reported: $\lambda_{min}$, which minimizes the chosen prediction error, and $\lambda_{1se}$, which selects a simpler model whose error is within one standard error of the minimum. 
-
-While $\lambda_{min}$ achieves the lowest estimated prediction error, it can sometimes result in overfitting by tailoring the model too closely to the specific folds of the cross-validation procedure. This can reduce stability and limit the model’s ability to generalize to new data, effectively capturing noise as well as signal. The “1-SE rule” mitigates this risk by selecting the largest $\lambda$ within one standard error of the minimum error. This approach yields a simpler and more parsimonious model, trading a very small loss in accuracy for improved robustness and generalizability. In practice, the stability of cross-validation also depends on how the folds are generated. Setting a random seed (e.g., using `set.seed()` in R) ensures that results are reproducible, since different random splits of the data can otherwise lead to slightly different values of $\lambda_{min}$ and $\lambda_{1se}$. Using different seeds can therefore yield different models, especially when predictors are highly correlated, which highlights the importance of interpreting the results with caution and relying on methods that improve stability, such as Elastic Net. For this reason, results should not be viewed as exact, but rather as indicators of broader economic patterns.
+While $\lambda_{min}$ achieves the lowest estimated prediction error, it can sometimes result in overfitting by tailoring the model too closely to the specific folds of the cross-validation procedure. This can reduce stability and limit the model’s ability to generalize to new data, effectively capturing both noise and signal. The “1-SE rule” mitigates this risk by selecting the largest $\lambda$ within one standard error of the minimum error. This approach yields a simpler and more parsimonious model, trading a very small loss in accuracy for improved robustness and generalizability. In practice, the stability of cross-validation also depends on how the folds are generated. Setting a random seed (e.g., using `set.seed()` in R) ensures that results are reproducible, since different random splits of the data can otherwise lead to slightly different values of $\lambda_{min}$ and $\lambda_{1se}$. Using different seeds can therefore yield different models, especially when predictors are highly correlated, which highlights the importance of interpreting the results with caution and relying on methods that improve stability, such as Elastic Net. For this reason, results should not be viewed as exact, but rather as indicators of broader economic patterns.
 
 Together, LASSO and Elastic Net provide a powerful framework for analyzing high-dimensional economic data. LASSO highlights the most relevant drivers of the dependent variable, while Elastic Net improves stability when predictors are correlated. By applying these methods, it becomes possible to balance interpretability and predictive accuracy, ensuring that the resulting models are both theoretically informative and practically useful.
 
-
-
-
 ```{r include=FALSE}
-# OLS Regression 
-# Run linear regression with Net Trade
-model <- lm(`GDP growth (annual %)` ~ 
-              `Fertility rate, total (births per woman)` +
-              `Employers, total (% of total employment) (modeled ILO estimate)` +
-              `Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)` +
-              `Life expectancy at birth, male (years)` +
-              `Unemployment, total (% of total labor force) (modeled ILO estimate)` +
-              `Export value index (2000 = 100)` +
-              `Population growth (annual %)` +
-              `GDP per capita, PPP (constant 2011 international $)` +
-              `Net trade in goods and services (BoP, current US$)` +
-              `Wage and salaried workers, total (% of total employment) (modeled ILO estimate)`,
-            data = df,
-            singular.ok = FALSE)
-
-# Model without Net Trade
+# OLS Regressions without trade and with trade
+model <- lm(`GDP growth (annual %)`~`Fertility rate, total (births per woman)`+`Employers, total (% of total employment) (modeled ILO estimate)`
++`Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)` +`Life expectancy at birth, male (years)`
++`Unemployment, total (% of total labor force) (modeled ILO estimate)`+`Export value index (2000 = 100)`+`Population growth (annual %)`
++`GDP per capita, PPP (constant 2011 international $)`+`Net trade in goods and services (BoP, current US$)`
++`Wage and salaried workers, total (% of total employment) (modeled ILO estimate)`,data = df,singular.ok = FALSE)
 model_without <- update(model, . ~ . - `Net trade in goods and services (BoP, current US$)`, singular.ok = FALSE)
-
 ```
 
 
@@ -131,34 +94,15 @@ To assess the determinants of GDP growth, we estimated an OLS regression model u
 
 ```{r include=FALSE}
 # OLS Regression with non linear and interaction effects
-
-# --- 1) Engineer features: nonlinear + interaction ---
-df2 <- within(df, {
-  `GDP per capita, PPP (constant 2011 international $)^2` <- 
-    (`GDP per capita, PPP (constant 2011 international $)`)^2
-  `Population growth (annual %)^2` <- (`Population growth (annual %)`^2)
-  `Unemp x LFP` <- 
-    `Unemployment, total (% of total labor force) (modeled ILO estimate)` *
-    `Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)`
-})
-# --- 2) Build linear regression with nonlinear effects (no intercept column) ---
-model_ext <- lm(
-  `GDP growth (annual %)` ~
-    `Fertility rate, total (births per woman)` +
-    `Employers, total (% of total employment) (modeled ILO estimate)` +
-    `Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)` +
-    `Life expectancy at birth, male (years)` +
-    `Unemployment, total (% of total labor force) (modeled ILO estimate)` +
-    `Export value index (2000 = 100)` +
-    `Population growth (annual %)` +
-    `Population growth (annual %)^2` +   # nonlinear term (already in df2)
-    `GDP per capita, PPP (constant 2011 international $)` +
-    `GDP per capita, PPP (constant 2011 international $)^2` +  # nonlinear term (convergence)
-    `Wage and salaried workers, total (% of total employment) (modeled ILO estimate)` +
-    `Unemp x LFP`,                          # interaction term (already in df2)
-  data = df2,
-  singular.ok = FALSE
-)
+df2<-within(df,{`GDP per capita, PPP (constant 2011 international $)^2`<-(`GDP per capita, PPP (constant 2011 international $)`)^2
+`Population growth (annual %)^2`<-(`Population growth (annual %)`^2)
+`Unemp x LFP`<-`Unemployment, total (% of total labor force) (modeled ILO estimate)`*`Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)`})
+model_ext <- lm(`GDP growth (annual %)`~`Fertility rate, total (births per woman)`+`Employers, total (% of total employment) (modeled ILO estimate)`
++`Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)`+`Life expectancy at birth, male (years)`
++`Unemployment, total (% of total labor force) (modeled ILO estimate)`+`Export value index (2000 = 100)`
++`Population growth (annual %)`+`Population growth (annual %)^2` # nonlinear
++`GDP per capita, PPP (constant 2011 international $)`+`GDP per capita, PPP (constant 2011 international $)^2` # convergence
++`Wage and salaried workers, total (% of total employment) (modeled ILO estimate)`+`Unemp x LFP`,data = df2,singular.ok = FALSE)
 ```
 
 Adding nonlinear and interaction terms does affect the model - refer to table 6 in Appendix A - to a limited extent. The adjusted R² increases slightly compared to the baseline specification (from 0.131 without nonlinearities to 0.137 with them), indicating a modest improvement in explanatory power. Importantly, the squared GDP per capita term becomes statistically significant, suggesting a convergence effect: countries with higher income levels grow more slowly, but the nonlinear term implies diminishing returns as economies develop. Similarly, the export value index and life expectancy remain strong predictors of growth.
@@ -169,53 +113,16 @@ Overall, the models perform reasonably well, but the diagnostic plots highlight 
 
 
 ```{r echo=FALSE}
-
-
-# Put models into a list
-models <- list(
-  "With Net Trade" = model,
-  "Without Net Trade" = model_without,
-  "Non-Linear Model" = model_ext
-)
-
-# Convert each model's data into a tidy dataframe
-df_models <- lapply(names(models), function(name) {
-  augment(models[[name]]) %>% 
-    mutate(Model = name)
-}) %>% bind_rows()
-
-# --- Residuals vs Fitted plot ---
-gg_resfit <- ggplot(df_models, aes(.fitted, .resid, color = Model)) +
-  geom_point(alpha = 0.6) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  facet_wrap(~Model) +
-  labs(title = "Residuals vs Fitted Comparison",
-       x = "Fitted values",
-       y = "Residuals") +
-  theme_minimal()
-
-# --- Normal Q-Q plot ---
-gg_qq <- ggplot(df_models, aes(sample = .std.resid, color = Model)) +
-  stat_qq(alpha = 0.6) +
-  stat_qq_line() +
-  facet_wrap(~Model) +
-  labs(title = "Normal Q-Q Comparison",
-       x = "Theoretical Quantiles",
-       y = "Standardized Residuals") +
-  theme_minimal()
-
-# --- Scale-Location plot (sqrt(|residuals|) vs fitted) ---
-gg_scale <- ggplot(df_models, aes(.fitted, sqrt(abs(.std.resid)), color = Model)) +
-  geom_point(alpha = 0.6) +
-  geom_smooth(se = FALSE, color = "black") +
-  facet_wrap(~Model) +
-  labs(title = "Scale-Location Comparison",
-       x = "Fitted values",
-       y = "Sqrt(|Standardized Residuals|)") +
-  theme_minimal()
-
-
-
+models <-list("With Net Trade"=model,"Without Net Trade"=model_without,"Non-Linear Model"=model_ext) #putting in list
+df_models <-lapply(names(models),function(name){augment(models[[name]]) %>% mutate(Model=name)}) %>% bind_rows() #tidy dataframe
+gg_resfit <-ggplot(df_models, aes(.fitted, .resid, color = Model)) + geom_point(alpha=0.6)+
+geom_hline(yintercept=0,linetype="dashed") + facet_wrap(~Model)+labs(title="Residuals vs Fitted Comparison",
+x="Fitted values",y="Residuals")+theme_minimal() #Residuals vs Fitted plot 
+gg_qq <- ggplot(df_models,aes(sample=.std.resid,color=Model))+stat_qq(alpha=0.6)+stat_qq_line()+facet_wrap(~Model)+
+labs(title="Normal Q-Q",x ="Theory Quantiles",y="Standardized Residuals")+theme_minimal() # Normal Q-Q plot
+gg_scale <- ggplot(df_models, aes(.fitted, sqrt(abs(.std.resid)),color=Model))+geom_point(alpha = 0.6)+
+geom_smooth(se = FALSE, color = "black")+facet_wrap(~Model)+labs(title = "Scale-Location Comparison",
+x="Fitted values",y="Sqrt(|Standardized Residuals|)")+theme_minimal() #Scale-Location plot
 ```
 
 
@@ -224,44 +131,18 @@ gg_scale <- ggplot(df_models, aes(.fitted, sqrt(abs(.std.resid)), color = Model)
 
 ```{r include=FALSE}
 # LASSO Regression
-
-# Prepare predictors (X) and response (y)
-X_lasso <- model.matrix(
-  `GDP growth (annual %)` ~
-    `Fertility rate, total (births per woman)` +
-    `Employers, total (% of total employment) (modeled ILO estimate)` +
-    `Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)` +
-    `Life expectancy at birth, male (years)` +
-    `Unemployment, total (% of total labor force) (modeled ILO estimate)` +
-    `Export value index (2000 = 100)` +
-    `Population growth (annual %)` +
-    `Population growth (annual %)^2` +         # Nonlinear
-    `GDP per capita, PPP (constant 2011 international $)` +
-    `GDP per capita, PPP (constant 2011 international $)^2` +   # Nonlinear (convergence effect)
-    `Net trade in goods and services (BoP, current US$)` +
-    `Wage and salaried workers, total (% of total employment) (modeled ILO estimate)` +
-    `Unemp x LFP`,                              # Interaction
-  data = df2
-)[, -1]  # drop intercept
-
+X_lasso <- model.matrix(`GDP growth (annual %)`~`Fertility rate, total (births per woman)`+`Employers, total (% of total employment) (modeled ILO estimate)`+
+`Labor force participation rate, total (% of total population ages 15+) (modeled ILO estimate)`+`Life expectancy at birth, male (years)`+
+`Unemployment, total (% of total labor force) (modeled ILO estimate)`+`Export value index (2000 = 100)`+
+`Population growth (annual %)`+`Population growth (annual %)^2`+`GDP per capita, PPP (constant 2011 international $)`+
+`GDP per capita, PPP (constant 2011 international $)^2`+`Net trade in goods and services (BoP, current US$)`+
+`Wage and salaried workers, total (% of total employment) (modeled ILO estimate)`+`Unemp x LFP`, # Interaction
+data = df2)[, -1] # drop intercept
 y_lasso <- df2$`GDP growth (annual %)`
-
-# --- 3) Cross-validated LASSO ---
-set.seed(2354245)                    # reproducibility
-cv_lasso_nl_int <- cv.glmnet(
-  X_lasso, y_lasso,
-  alpha = 1,                     # LASSO
-  nfolds = 10,
-  standardize = TRUE)
-
-# --- 4) Inspect results ---
-cv_lasso_nl_int$lambda.min
-cv_lasso_nl_int$lambda.1se
-
-coef(cv_lasso_nl_int, s = "lambda.min")
-coef(cv_lasso_nl_int, s = "lambda.1se")
-
-
+#Cross-validated LASSO 
+set.seed(2354245);cv_lasso_nl_int<-cv.glmnet(X_lasso,y_lasso,alpha = 1,nfolds = 10,standardize = TRUE)
+cv_lasso_nl_int$lambda.min;cv_lasso_nl_int$lambda.1se
+coef(cv_lasso_nl_int, s = "lambda.min");coef(cv_lasso_nl_int, s = "lambda.1se")
 ```
 To test the robustness of the models, the models were re-estimated the model using LASSO, the results showed that only a small number of variables consistently matter for explaining GDP growth. At a moderate penalty, LASSO kept factors like employment, life expectancy, unemployment, exports, and GDP per capita, while shrinking most of the other variables to zero. This means those extra variables don’t add much predictive power. When the penalty is made stronger, the model drops everything and reduces to just the average growth rate, showing that the data do not strongly support keeping many predictors. In comparison to the OLS model, which included every variable, LASSO highlights the ones that really drive the results and removes the noise. In practice, this makes the model simpler, less prone to overfitting, and more focused on the variables that actually matter.
 
@@ -269,114 +150,54 @@ To test the robustness of the models, the models were re-estimated the model usi
 Standardizing predictors before applying LASSO is important because the penalty is applied to the scale of the coefficients. When variables are standardized, the changes are on a comparable scale, so the penalty is lower and the model can retain meaningful predictors. Without standardization, variables measured in larger units are penalized more heavily, which can cause all coefficients to shrink to zero regardless of their predictive power. As shown in Table 1, without standardization being applied, most coefficients go to zero, while with standardization some predictors remain in the model. This demonstrates that standardization ensures the penalty works fairly across variables.
 
 ```{r include=FALSE}
-# Importance of Standardization
-# LASSO without standardization
-set.seed(2134)
-cv_no_std <- cv.glmnet(X_lasso, y_lasso, alpha = 1, nfolds = 10, standardize = FALSE)
-coef(cv_no_std, s = "lambda.min")
-# LASSO with standardization (default in glmnet)
-set.seed(2134)
-cv_std <- cv.glmnet(X_lasso, y_lasso, alpha = 1, nfolds = 10, standardize = TRUE)
-coef(cv_std, s = "lambda.min")
+set.seed(2134);cv_no_std <- cv.glmnet(X_lasso, y_lasso, alpha = 1, nfolds = 10, standardize = FALSE)
+coef(cv_no_std, s = "lambda.min") # LASSO without standardization
+set.seed(2134);cv_std <- cv.glmnet(X_lasso, y_lasso, alpha = 1, nfolds = 10, standardize = TRUE)
+coef(cv_std, s = "lambda.min") # LASSO with standardization (default in glmnet)
 ```
 
 ```{r echo=FALSE}
-# Extract coefficients
-coef_no_std <- as.matrix(coef(cv_no_std, s = "lambda.min"))
-coef_std    <- as.matrix(coef(cv_std, s = "lambda.min"))
-
-# Combine into a comparison table
-comparison <- data.frame(
-  Variable = rownames(coef_no_std),
-  `No Standardization` = round(coef_no_std[,1], 6),
-  Standardization = round(coef_std[,1], 6)
-)
-
-
+coef_no_std<-as.matrix(coef(cv_no_std,s="lambda.min"));coef_std<-as.matrix(coef(cv_std,s="lambda.min"))
+comparison <- data.frame(Variable = rownames(coef_no_std),`No Standardization` = round(coef_no_std[,1], 6),
+Standardization = round(coef_std[,1], 6)) # Combining into a comparison table
 ```
 
 While the LASSO results are informative, they were estimated on a reduced set of predictors to illustrate the role of variable selection and standardization. To further improve upon these baseline models, we now employ the full dataset and introduce additional forms of regularization. In particular, ridge regression and elastic net allow us to balance shrinkage and selection in different ways, potentially yielding models that are both more stable and more accurate in prediction.
 
-
 Cross-validation identified an optimal penalty of λ.min = 0.1827, which minimizes prediction error, and a more restrictive value of λ.1se = 2, which favors a simpler model. At λ.min, the LASSO retains a broad set of predictors, including demographic variables such as adolescent fertility rates, population structure, and life expectancy, along with labor market indicators like employment in industry, labor force participation, and unemployment. Institutional and economic measures, such as the export value index, tax-related indicators, and credit information, also remain in the model. These results suggest that a wide range of socioeconomic factors can contribute to explaining GDP growth when the model is allowed more flexibility. However, at λ.1se, the penalty is stronger, and all coefficients shrink to zero. This sharp reduction illustrates why relying solely on λ.min can sometimes lead to overfitting: the model captures more noise in an attempt to minimize error. The 1-SE rule mitigates this risk by favoring a more parsimonious model that sacrifices a small amount of predictive accuracy in exchange for greater robustness. Economically, this highlights that although factors like human capital (life expectancy, employment patterns) and trade (exports) appear relevant under weaker penalization, their effects are not strong or consistent enough to survive stricter regularization in our dataset.
 
-
-
-
-
-
-
-
-
-
 ```{r echo=FALSE}
-# LASSO
-set.seed(254646)
-# Grid search for lamda
-lambda_grid <- seq(0.001, 2, length.out = 100)
-
-cv_lasso <- cv.glmnet(
-  Xvars_mat_train, Yvar_train,
-  family = "gaussian",
-  alpha = 1,    # LASSO
-  lambda = lambda_grid,            
-  nfolds = 10,
-  type.measure = "mse",
-  standardize = TRUE)
-
-best_lambda_min  <- cv_lasso$lambda.min
-best_lambda_1se  <- cv_lasso$lambda.1se
+# LASSO Grid search for lambda
+set.seed(254646);lambda_grid<-seq(0.001,2,length.out=100)
+cv_lasso<-cv.glmnet(Xvars_mat_train,Yvar_train,family="gaussian",alpha=1,lambda=lambda_grid,
+nfolds = 10,type.measure="mse",standardize=TRUE)
+best_lambda_min<-cv_lasso$lambda.min; best_lambda_1se<-cv_lasso$lambda.1se
 ```
 
 
 ```{r echo=FALSE}
-# Extract coefficients
-coef_min <- as.matrix(coef(cv_lasso, s = "lambda.min"))
-coef_1se <- as.matrix(coef(cv_lasso, s = "lambda.1se"))
-
-# Get selected variables (non-zero coefficients)
-sel_min <- coef_min[coef_min[,1] != 0, , drop = FALSE]
-sel_1se <- coef_1se[coef_1se[,1] != 0, , drop = FALSE]
-
-# Create data frames
-df_min <- data.frame(Variable = rownames(sel_min), Coef_min = sel_min[,1])
-df_1se <- data.frame(Variable = rownames(sel_1se), Coef_1se = sel_1se[,1])
-
-# Merge into one comparative table
-comparative_tbl <- merge(df_min, df_1se, by = "Variable", all = TRUE)
-
-
+coef_min<-as.matrix(coef(cv_lasso,s="lambda.min"));coef_1se<-as.matrix(coef(cv_lasso,s="lambda.1se"))
+sel_min<-coef_min[coef_min[,1] !=0, ,drop=FALSE] #Get selected variables from extracted coefficients
+sel_1se<-coef_1se[coef_1se[,1] != 0, ,drop=FALSE] #non-zero coefficients
+df_min<-data.frame(Variable=rownames(sel_min),Coef_min=sel_min[,1]) #Create data frames
+df_1se<-data.frame(Variable=rownames(sel_1se),Coef_1se=sel_1se[,1])
+comparative_tbl<-merge(df_min,df_1se,by="Variable",all=TRUE) 
 ```
 
 ```{r echo=FALSE}
-# Functions for metrics.
-rmse <- function(y, p) sqrt(mean((y - p)^2))
-mae  <- function(y, p) mean(abs(y - p))
-r2   <- function(y, p) 1 - sum((y - p)^2) / sum((y - mean(y))^2)
-
-row_metrics <- function(name, y, p) {
-  data.frame(
-    Model = name,
-    RMSE  = rmse(y, p),
-    MAE   = mae(y, p),
-    R2    = r2(y, p),
-    SD_y  = sd(y))}
-
-nz_coefs <- function(cv_obj, s) {
-  cf <- as.matrix(coef(cv_obj, s = s))
-  out <- data.frame(Variable = rownames(cf), Coef = cf[,1], row.names = NULL)
-  subset(out, Coef != 0)}
-
-# Lasso Predictions. 
+rmse<-function(y,p) sqrt(mean((y-p)^2)); mae<-function(y,p) mean(abs(y-p))
+r2<-function(y,p) 1-sum((y-p)^2)/sum((y-mean(y))^2) # metrics functions
+row_metrics<-function(name,y,p){data.frame(Model=name,RMSE=rmse(y,p),
+MAE=mae(y,p),R2=r2(y,p),SD_y=sd(y))}
+nz_coefs<-function(cv_obj,s){cf<-as.matrix(coef(cv_obj,s=s))
+out<-data.frame(Variable=rownames(cf),Coef=cf[,1],row.names=NULL);subset(out,Coef!=0)}
+# Lasso Predictions
 pred_lasso_min <- as.numeric(predict(cv_lasso, newx = Xvars_mat_test, s = "lambda.min"))
 pred_lasso_1se <- as.numeric(predict(cv_lasso, newx = Xvars_mat_test, s = "lambda.1se"))
 met_lasso_min  <- row_metrics("Lasso (lambda.min)",  Yvar_test, pred_lasso_min)
 met_lasso_1se  <- row_metrics("Lasso (lambda.1se)",  Yvar_test, pred_lasso_1se)
-sel_lasso_min  <- nz_coefs(cv_lasso, "lambda.min")
-sel_lasso_1se  <- nz_coefs(cv_lasso, "lambda.1se")
-
-# Baseline (Mean of the Variable)
-pred_base <- rep(mean(Yvar_train), length(Yvar_test))
+sel_lasso_min  <- nz_coefs(cv_lasso, "lambda.min"); sel_lasso_1se  <- nz_coefs(cv_lasso, "lambda.1se")
+pred_base <- rep(mean(Yvar_train), length(Yvar_test)) # Baseline (mean)
 met_base  <- row_metrics("Baseline (mean of train)", Yvar_test, pred_base)
 ```
 
@@ -384,117 +205,60 @@ met_base  <- row_metrics("Baseline (mean of train)", Yvar_test, pred_base)
 For Elastic Net, cross-validation selected a mixing parameter of α = 0.4, which indicates that the best-performing model combines both LASSO (variable selection) and Ridge (shrinkage) elements, with a slightly stronger tilt toward Ridge. The optimal penalty values were λ.min = 0.3163, minimizing the mean squared error, and λ.1se = 2.2320, which yields a more parsimonious model. Compared to LASSO, Elastic Net provides greater stability by shrinking correlated predictors together rather than arbitrarily selecting only one of them. This is particularly relevant in a dataset like ours, where many economic and demographic indicators are strongly correlated (e.g., labor market variables, population measures). In practice, the results suggest that while LASSO highlights individual variables as potential drivers of GDP growth, Elastic Net balances this by keeping groups of related predictors, making it less sensitive to data noise and more reliable for generalization. Thus, Elastic Net serves as a compromise between the sparsity of LASSO and the stability of Ridge regression, offering a more robust framework for capturing the complex relationships in the data.
 
 ```{r include=FALSE}
-# ELASTIC NET 
-set.seed(2546)
-# Grid Search for alpha and
-alpha_grid <- seq(0.1, 0.9, by = 0.1)
-
-# Train the model
-cv_list <- lapply(alpha_grid, function(a)
-  cv.glmnet(
-    Xvars_mat_train, Yvar_train,
-    family = "gaussian",
-    alpha  = a,
-    nfolds = 10,
-    type.measure = "mse",
-    standardize = TRUE))
-
-cv_mins <- sapply(cv_list, function(cv) min(cv$cvm))
-best_i  <- which.min(cv_mins)
-best_a  <- alpha_grid[best_i]
-best_cv <- cv_list[[best_i]]
-
-cat("\nElastic Net — best alpha:", best_a, "| lambda.min:", signif(best_cv$lambda.min, 4),
-    "| lambda.1se:", signif(best_cv$lambda.1se, 4), "\n")
+# ELASTIC NET, grid search for alpha and training the model
+set.seed(2546); alpha_grid<-seq(0.1,0.9,by=0.1); 
+cv_list<-lapply(alpha_grid,function(a) cv.glmnet(Xvars_mat_train,Yvar_train,family="gaussian",
+alpha=a,nfolds=10,type.measure="mse",standardize=TRUE)); cv_mins<-sapply(cv_list, function(cv) min(cv$cvm)); best_i<-which.min(cv_mins); best_a<-alpha_grid[best_i]; 
+best_cv <- cv_list[[best_i]];cat("\nElastic Net — best alpha:",best_a,"| lambda.min:",signif(best_cv$lambda.min,4), "| lambda.1se:", signif(best_cv$lambda.1se, 4), "\n")
 ```
 
 ```{r echo=FALSE}
-# Existing LASSO table
-lam_tbl <- data.frame(
-  Method = c("LASSO", "LASSO"),
-  Metric = c("$λ$.min", "$λ$.1se"),
-  Value  = c(signif(best_lambda_min, 4), signif(best_lambda_1se, 4))
-)
-
-# Add Elastic Net results
-elastic_tbl <- data.frame(
-  Method = c("Elastic Net", "Elastic Net", "Elastic Net"),
-  Metric = c("$α$", "$λ$.min", "$λ$.1se"),
-  Value  = c(best_a, signif(best_cv$lambda.min, 4), signif(best_cv$lambda.1se, 4))
-)
-
-# Combine
-lam_tbl <- rbind(lam_tbl, elastic_tbl)
-
-# Display
-knitr::kable(lam_tbl, caption = "Optimal tuning parameters for LASSO and Elastic Net")
-
+lam_tbl<-data.frame(Method=c("LASSO","LASSO"),Metric=c("$λ$.min","$λ$.1se"),
+Value=c(signif(best_lambda_min,4),signif(best_lambda_1se,4))) # existing lasso table
+elastic_tbl<-data.frame(Method=c("Elastic Net","Elastic Net","Elastic Net"),Metric=c("$α$","$λ$.min","$λ$.1se"),
+Value=c(best_a,signif(best_cv$lambda.min,4),signif(best_cv$lambda.1se,4))) #adding elastic net results
+lam_tbl <- rbind(lam_tbl, elastic_tbl) #combine 
+knitr::kable(lam_tbl, caption = "Optimal tuning parameters for LASSO and Elastic Net") #display
 ```
-
-
 
 
 
 
 ```{r include=FALSE}
-
 # Elastic Net Predictions. 
-pred_en_min <- as.numeric(predict(best_cv, newx = Xvars_mat_test, s = "lambda.min"))
-pred_en_1se <- as.numeric(predict(best_cv, newx = Xvars_mat_test, s = "lambda.1se"))
-met_en_min  <- row_metrics(paste0("Elastic Net α=", best_a, " (lambda.min)"), Yvar_test, pred_en_min)
-met_en_1se  <- row_metrics(paste0("Elastic Net α=", best_a, " (lambda.1se)"), Yvar_test, pred_en_1se)
-sel_en_min  <- nz_coefs(best_cv, "lambda.min")
-sel_en_1se  <- nz_coefs(best_cv, "lambda.1se")
+pred_en_min<-as.numeric(predict(best_cv, newx = Xvars_mat_test, s = "lambda.min"))
+pred_en_1se<-as.numeric(predict(best_cv, newx = Xvars_mat_test, s = "lambda.1se"))
+met_en_min<-row_metrics(paste0("Elastic Net α=", best_a, " (lambda.min)"), Yvar_test, pred_en_min)
+met_en_1se<-row_metrics(paste0("Elastic Net α=", best_a, " (lambda.1se)"), Yvar_test, pred_en_1se)
+sel_en_min<-nz_coefs(best_cv, "lambda.min"); sel_en_1se<-nz_coefs(best_cv, "lambda.1se")
 ```
 
 ```{r echo=FALSE}
-# Metric Comparison. 
-metrics_all <- rbind(met_base, met_lasso_min, met_lasso_1se, met_en_min, met_en_1se)
-
-metrics_tbl <- metrics_all %>%
-  dplyr::select(Model, RMSE, MAE, R2, SD_y) %>%
-  mutate(across(where(is.numeric), ~ round(., 3)))
-
-best_rmse_idx <- which.min(metrics_all$RMSE)
-
-kable(metrics_tbl, caption = "Test Performance (RMSE, MAE, $R²$, $SD_y$)") %>%
-  kable_styling(full_width = FALSE, position = "center", bootstrap_options = c("striped","hover","condensed")) %>%
-  row_spec(best_rmse_idx, bold = TRUE)
+metrics_all<-rbind(met_base, met_lasso_min, met_lasso_1se, met_en_min, met_en_1se) #metric comparison
+metrics_tbl<-metrics_all%>%dplyr::select(Model, RMSE, MAE, R2, SD_y) %>%
+mutate(across(where(is.numeric),~round(.,3))); best_rmse_idx<-which.min(metrics_all$RMSE)
+kable(metrics_tbl,caption="Test Performance (RMSE, MAE, $R²$, $SD_y$)")%>%
+kable_styling(full_width=FALSE,position="center",bootstrap_options=c("striped","hover","condensed"))%>%
+row_spec(best_rmse_idx, bold = TRUE)
 ```
 
 ```{r include=FALSE}
-# Best features used. 
-top_k <- 15
+top_k<-15 #Best features used
 top_lasso_min <- head(sel_lasso_min[order(abs(sel_lasso_min$Coef), decreasing = TRUE), ], top_k)
 top_lasso_1se <- head(sel_lasso_1se[order(abs(sel_lasso_1se$Coef), decreasing = TRUE), ], top_k)
 top_en_min    <- head(sel_en_min[order(abs(sel_en_min$Coef),   decreasing = TRUE), ], top_k)
 top_en_1se    <- head(sel_en_1se[order(abs(sel_en_1se$Coef),   decreasing = TRUE), ], top_k)
-
-
-# Amount of Variables Selected in each model. 
-count_nz <- function(df) sum(df$Variable != "(Intercept)")
+count_nz <- function(df) sum(df$Variable != "(Intercept)") # amount of variables selected in each model
 cat("\n Amount of Variables -> Lasso min:", count_nz(sel_lasso_min),"| Lasso 1se:", count_nz(sel_lasso_1se),
-    "| ENet min:", count_nz(sel_en_min), "| ENet 1se:", count_nz(sel_en_1se), "\n")
+   "| ENet min:", count_nz(sel_en_min), "| ENet 1se:", count_nz(sel_en_1se), "\n")
 ```
 ```{r echo=FALSE}
-# Extract variable names from each model
-vars_lasso_min <- sel_lasso_min$Variable
-vars_lasso_1se <- sel_lasso_1se$Variable
-vars_en_min    <- sel_en_min$Variable
-vars_en_1se    <- sel_en_1se$Variable
-
-# Combine into one master list
-all_vars <- unique(c(vars_lasso_min, vars_lasso_1se, vars_en_min, vars_en_1se))
-
-# Build comparative data frame
-comparative_df <- data.frame(
-  Variable      = all_vars,
-  L_min     = ifelse(all_vars %in% vars_lasso_min, "T", "F"),
-  L_1se     = ifelse(all_vars %in% vars_lasso_1se, "T", "F"),
-  ENet_min = ifelse(all_vars %in% vars_en_min, "T", "F"),
-  ENet_1se = ifelse(all_vars %in% vars_en_1se, "T", "F")
-)
-
+vars_lasso_min <-sel_lasso_min$Variable; vars_lasso_1se<-sel_lasso_1se$Variable
+vars_en_min<-sel_en_min$Variable; vars_en_1se<-sel_en_1se$Variable # extract variable names
+all_vars<-unique(c(vars_lasso_min,vars_lasso_1se,vars_en_min,vars_en_1se)) # combined into 1 master vector 
+comparative_df<-data.frame(Variable=all_vars,L_min=ifelse(all_vars%in%vars_lasso_min,"T","F"),
+L_1se=ifelse(all_vars %in% vars_lasso_1se,"T","F"),ENet_min=ifelse(all_vars %in% vars_en_min,"T","F"),
+ENet_1se = ifelse(all_vars %in% vars_en_1se,"T","F"))
 ```
 At first glance, it might seem enough to run a regular regression and simply remove the variables that don’t look significant. But this approach has some important problems. Standard regression struggles when variables are highly related to each other, or when there are many variables compared to the number of observations. In those cases, the estimates can jump around a lot depending on small changes in the data, which makes the model unreliable.
 
@@ -513,79 +277,43 @@ In short, penalized regression is not just a more complicated way of doing regre
 
 ```{r include=FALSE}
 # Ridge and Logistic
-df_logistic <- data_clean[ , !(names(data_clean) %in% "Country")]
+df_logistic<-data_clean[ , !(names(data_clean) %in% "Country")] 
 df_logistic$GrowingMore <- as.integer(df_logistic$`GDP growth (annual %)` > 2.7)
-
-# Data Splitting (Seed One)
-set.seed(1111)
-train_index <- sample.int(nrow(df_logistic), 110)
-train_set <- df_logistic[train_index, ]
-test_set  <- df_logistic[-train_index, ]
-y_train <- train_set$GrowingMore
-y_test  <- test_set$GrowingMore
+set.seed(1111); train_index<-sample.int(nrow(df_logistic),110) # Data Splitting (Seed One)
+train_set<-df_logistic[train_index, ]; test_set  <- df_logistic[-train_index, ]
+y_train<-train_set$GrowingMore; y_test<-test_set$GrowingMore
 X_train <- model.matrix(GrowingMore ~ . -`GDP growth (annual %)`, data=train_set)[, -1]
 X_test  <- model.matrix(GrowingMore ~ . - `GDP growth (annual %)`, data=test_set )[,-1]
 ```
 
 ```{r include=FALSE}
-cv_ridge <- cv.glmnet(
-  X_train, y_train,
-  family = "binomial",
-  alpha  = 0,               
-  nfolds = 10,
-  type.measure = "deviance",
-  standardize = TRUE)
-
-lam_min <- cv_ridge$lambda.min
-lam_1se <- cv_ridge$lambda.1se
-cat("lambda.min =", signif(lam_min,4), " | lambda.1se =", signif(lam_1se,4), "\n")
-
+cv_ridge<-cv.glmnet(X_train,y_train,family="binomial",alpha=0,nfolds=10,type.measure="deviance",standardize=TRUE)
+lam_min<-cv_ridge$lambda.min; lam_1se<-cv_ridge$lambda.1se
+cat("lambda.min =",signif(lam_min,4)," | lambda.1se =",signif(lam_1se,4), "\n")
 # Prediction on Test Using both variables. 
 p_min <- as.numeric(predict(cv_ridge, newx = X_test, s = "lambda.min", type = "response"))
 p_1se <- as.numeric(predict(cv_ridge, newx = X_test, s = "lambda.1se", type = "response"))
-
-# Classify at 0.5
-pred_min <- ifelse(p_min >= 0.5, 1, 0)
-pred_1se <- ifelse(p_1se >= 0.5, 1, 0)
+pred_min <- ifelse(p_min >= 0.5, 1, 0); pred_1se <- ifelse(p_1se >= 0.5, 1, 0) # Classify at 0.5
 ```
 
 ```{r include=FALSE}
-# Metrics for performance. 
-logloss <- function(y, p) { p <- pmin(pmax(p, 1e-15), 1-1e-15); -mean(y*log(p) + (1-y)*log(1-p)) }
-brier   <- function(y, p) mean((p - y)^2)
-
-acc_min  <- mean(pred_min == y_test)
-acc_1se  <- mean(pred_1se == y_test)
-ll_min   <- logloss(y_test, p_min)
-ll_1se   <- logloss(y_test, p_1se)
-br_min   <- brier(y_test, p_min)
-br_1se   <- brier(y_test, p_1se)
-
-# optional AUC
-get_auc <- function(y,p){
-  if (requireNamespace("pROC", quietly = TRUE)) as.numeric(pROC::auc(y, p)) else NA_real_}
-auc_min <- get_auc(y_test, p_min)
-auc_1se <- get_auc(y_test, p_1se)
-
-results <- data.frame(
-  Model   = c("Ridge (lambda.min)", "Ridge (lambda.1se)"),
-  Accuracy= c(acc_min, acc_1se),
-  LogLoss = c(ll_min, ll_1se),
-  Brier   = c(br_min, br_1se),
-  AUC     = c(auc_min, auc_1se))
-
-print(results, row.names = FALSE)
+logloss<-function(y,p){p<-pmin(pmax(p,1e-15),1-1e-15);-mean(y*log(p)+(1-y)*log(1-p))}
+brier<-function(y,p) mean((p-y)^2) # Metrics for performance
+acc_min<-mean(pred_min==y_test); acc_1se<-mean(pred_1se==y_test); ll_min<-logloss(y_test,p_min)
+ll_1se<-logloss(y_test,p_1se); br_min<-brier(y_test,p_min); br_1se<-brier(y_test,p_1se)
+get_auc<-function(y,p){if(requireNamespace("pROC",quietly=TRUE))as.numeric(pROC::auc(y,p))else NA_real_}
+auc_min<-get_auc(y_test,p_min); auc_1se<-get_auc(y_test,p_1se) # optional AUC
+results<-data.frame(Model=c("Ridge (lambda.min)","Ridge (lambda.1se)"),Accuracy=c(acc_min,acc_1se),
+LogLoss=c(ll_min,ll_1se),Brier=c(br_min,br_1se),AUC=c(auc_min,auc_1se)); print(results,row.names=FALSE)
 ```
 Additionally, we wanted to check whether some countries tend to grow faster than most others. To make that precise, we defined a binary target **Growing more** (1 if annual GDP growth **> 2.7%**, 0 otherwise) and fit logistic regression with a **Ridge** penalty, comparing the cross-validated choices $\lambda_{\min}$ and $\lambda_{1\mathrm{se}}$. As reported in **Table 3**, the $\lambda_{1\mathrm{se}}$ model outperforms $\lambda_{\min}$ on the test set—higher **Accuracy** (0.525 vs 0.475) and, more importantly, lower **LogLoss** (0.6871 vs 0.8054) and **Brier** (0.2471 vs 0.2774), with **AUC** also improving (0.563 vs 0.464).
 
 
 ```{r echo=FALSE}
-results_tbl <- results %>%
-  transmute(Model, Accuracy = round(Accuracy, 4), LogLoss  = round(LogLoss, 4),
-    Brier = round(Brier, 4), AUC = ifelse(is.na(AUC), NA, round(AUC, 3)))
-
-kable(results_tbl, caption = "Ridge (logistic) — Test Metrics") %>%
-  kable_styling(full_width = FALSE, position = "center", bootstrap_options = c("striped","hover","condensed"))
+results_tbl<-results%>%transmute(Model,Accuracy=round(Accuracy,4),LogLoss=round(LogLoss,4),
+Brier=round(Brier,4),AUC=ifelse(is.na(AUC),NA,round(AUC,3)))
+kable(results_tbl,caption="Ridge (logistic) — Test Metrics")%>%
+kable_styling(full_width=FALSE,position="center",bootstrap_options = c("striped","hover","condensed"))
 ```
 
 
@@ -595,114 +323,58 @@ This split-to-split variability—visible in **Table 4**—is exactly what we wo
 
 If we could add data, we would first prioritize **more countries (rows)** to reduce variance and stabilize results; then we would add **relevant** predictors (institutions, investment, demographics, trade exposure, external shocks) to capture more of the true drivers. Predicting **continuous GDP growth** is preferable when magnitudes matter for budgeting and scenario analysis, whereas predicting **Growing more** is more useful for threshold-based decisions where an actionable probability—“will this country exceed 2.7%?”—is exactly what is needed.
 ```{r include=FALSE}
-# Final Model and Coefficientes. 
-coef_min <- coef(cv_ridge, s = "lambda.min")
-coef_1se <- coef(cv_ridge, s = "lambda.1se")
-# Example: show 10 largest (by |coef|) at lambda.1se
-ix <- order(abs(as.numeric(coef_1se)) , decreasing = TRUE)
-print(coef_1se[ix[1:10], , drop = FALSE])
+# Final Model Coefficients, and example showing 10 largest (by |coef|) at lambda.1se
+coef_min<-coef(cv_ridge,s="lambda.min"); coef_1se<-coef(cv_ridge,s="lambda.1se")
+ix<-order(abs(as.numeric(coef_1se)),decreasing = TRUE); print(coef_1se[ix[1:10], ,drop=FALSE])
 ```
 
 ```{r include=FALSE}
-# Data Splitting (Seed Two)
-set.seed(9999)
-train_index <- sample.int(nrow(df_logistic), 110)
-train_set <- df_logistic[train_index, ]
-test_set  <- df_logistic[-train_index, ]
-y_train <- train_set$GrowingMore
-y_test  <- test_set$GrowingMore
-X_train <- model.matrix(GrowingMore ~ . -`GDP growth (annual %)`, data=train_set)[, -1]
-X_test  <- model.matrix(GrowingMore ~ . - `GDP growth (annual %)`, data=test_set )[,-1]
+set.seed(9999); train_index<-sample.int(nrow(df_logistic),110) # Data Splitting (Seed Two)
+train_set<-df_logistic[train_index, ]; test_set<-df_logistic[-train_index, ]
+y_train<-train_set$GrowingMore; y_test<-test_set$GrowingMore
+X_train<-model.matrix(GrowingMore ~ . -`GDP growth (annual %)`, data=train_set)[, -1]
+X_test<-model.matrix(GrowingMore ~ . - `GDP growth (annual %)`, data=test_set )[,-1]
 ```
 
 
 ```{r include=FALSE}
 # Ridge and Elastic Net. 
-cv_ridge <- cv.glmnet(
-  X_train, y_train,
-  family = "binomial",
-  alpha  = 0,               
-  nfolds = 10,
-  type.measure = "deviance",
-  standardize = TRUE)
-
-lam_min <- cv_ridge$lambda.min  
-lam_1se <- cv_ridge$lambda.1se
+cv_ridge<-cv.glmnet(X_train,y_train,family="binomial",alpha=0,nfolds = 10,type.measure="deviance",standardize=TRUE)
+lam_min<-cv_ridge$lambda.min; lam_1se<-cv_ridge$lambda.1se
 cat("lambda.min =", signif(lam_min,4), " | lambda.1se =", signif(lam_1se,4), "\n")
-
 # Prediction on Test Using both variables. 
 p_min <- as.numeric(predict(cv_ridge, newx = X_test, s = "lambda.min", type = "response"))
 p_1se <- as.numeric(predict(cv_ridge, newx = X_test, s = "lambda.1se", type = "response"))
-
-# Classify at 0.5
-pred_min <- ifelse(p_min >= 0.5, 1, 0)
-pred_1se <- ifelse(p_1se >= 0.5, 1, 0)
+pred_min<-ifelse(p_min>=0.5,1,0); pred_1se<-ifelse(p_1se>=0.5,1,0) # Classify at 0.5
 ```
 
 
 
 ```{r include=FALSE}
-# Metrics for performance. 
-logloss <- function(y, p) { p <- pmin(pmax(p, 1e-15), 1-1e-15); -mean(y*log(p) + (1-y)*log(1-p)) }
-brier   <- function(y, p) mean((p - y)^2)
-acc_min  <- mean(pred_min == y_test) 
-acc_1se  <- mean(pred_1se == y_test)
-ll_min   <- logloss(y_test, p_min) 
-ll_1se   <- logloss(y_test, p_1se) 
-br_min   <- brier(y_test, p_min)
-br_1se   <- brier(y_test, p_1se)
-# optional AUC
-get_auc <- function(y,p){
-  if (requireNamespace("pROC", quietly = TRUE)) as.numeric(pROC::auc(y, p)) else NA_real_}
-auc_min <- get_auc(y_test, p_min)
-auc_1se <- get_auc(y_test, p_1se)
-
-results1 <- data.frame(
-  Model   = c("Ridge (lambda.min)", "Ridge (lambda.1se)"),
-  Accuracy= c(acc_min, acc_1se),
-  LogLoss = c(ll_min, ll_1se),
-  Brier   = c(br_min, br_1se),
-  AUC     = c(auc_min, auc_1se))
-
-print(results, row.names = FALSE)
-
-results_tbl_1 <- results1 %>%
-  transmute(
-    Model,
-    Accuracy = round(Accuracy, 4),
-    LogLoss  = round(LogLoss, 4),
-    Brier    = round(Brier, 4),
-    AUC      = ifelse(is.na(AUC), NA, round(AUC, 3)))
-
-kable(results_tbl_1, caption = "Ridge (logistic) — Test Metrics") %>%
-  kable_styling(full_width = FALSE, position = "center", bootstrap_options = c("striped","hover","condensed"))
+logloss<-function(y,p){p<-pmin(pmax(p,1e-15),1-1e-15); -mean(y*log(p)+(1-y)*log(1-p))} # Metrics for performance
+brier<-function(y,p) mean((p-y)^2); acc_min<-mean(pred_min==y_test); acc_1se<-mean(pred_1se==y_test)
+ll_min<-logloss(y_test,p_min); ll_1se<-logloss(y_test,p_1se); br_min<-brier(y_test,p_min); br_1se<-brier(y_test,p_1se)
+get_auc<-function(y,p){if(requireNamespace("pROC",quietly=TRUE))as.numeric(pROC::auc(y, p))else NA_real_}
+auc_min<-get_auc(y_test,p_min); auc_1se<-get_auc(y_test,p_1se) # optional AUC
+results1<-data.frame(Model=c("Ridge (lambda.min)","Ridge (lambda.1se)"),Accuracy=c(acc_min,acc_1se),LogLoss=c(ll_min,ll_1se),
+Brier=c(br_min,br_1se),AUC=c(auc_min,auc_1se)); print(results, row.names = FALSE)
+results_tbl_1<-results1%>%transmute(Model,Accuracy=round(Accuracy,4),LogLoss=round(LogLoss,4),Brier=round(Brier,4),
+AUC=ifelse(is.na(AUC),NA,round(AUC,3))); kable(results_tbl_1,caption="Ridge (logistic) — Test Metrics") %>% 
+kable_styling(full_width = FALSE, position = "center", bootstrap_options = c("striped","hover","condensed"))
 ```
 
 ```{r include=FALSE}
-coef_min <- coef(cv_ridge, s = "lambda.min")
-coef_1se <- coef(cv_ridge, s = "lambda.1se")
-ix <- order(abs(as.numeric(coef_1se)) , decreasing = TRUE)
-print(coef_1se[ix[1:10], , drop = FALSE])
+coef_min<-coef(cv_ridge,s="lambda.min"); coef_1se<-coef(cv_ridge,s="lambda.1se")
+ix<-order(abs(as.numeric(coef_1se)),decreasing=TRUE); print(coef_1se[ix[1:10], ,drop=FALSE])
 ```
 
 ```{r echo=FALSE}
-tblA <- results_tbl_1 %>%
-  select(Model, Accuracy, LogLoss, Brier, AUC) %>%
-  mutate(across(-Model, ~round(., 4)))
-tblB <- results_tbl %>%
-  select(Model, Accuracy, LogLoss, Brier, AUC) %>%
-  mutate(across(-Model, ~round(., 4)))
-wide <- inner_join(tblA, tblB, by = "Model", suffix = c("_run1", "_run2"))
-# Table Output.
-kable(
-  wide,
-  col.names = c("Model", "Accuracy", "LogLoss", "Brier", "AUC",
-                "Accuracy", "LogLoss", "Brier", "AUC"),
-  caption = "Ridge (logistic) — Test Metrics (different seeds)"
-) %>%
-  kable_styling(full_width = FALSE, position = "center",
-                bootstrap_options = c("striped","hover","condensed")) %>%
-  add_header_above(c(" " = 1, "Run 1" = 4, "Run 2" = 4))
+tblA<-results_tbl_1%>% select(Model,Accuracy,LogLoss,Brier,AUC)%>% mutate(across(-Model,~round(.,4)))
+tblB<-results_tbl%>% select(Model,Accuracy,LogLoss,Brier,AUC)%>% mutate(across(-Model,~round(.,4)))
+wide<-inner_join(tblA,tblB,by="Model",suffix=c("_run1","_run2"))
+kable(wide,col.names=c("Model","Accuracy","LogLoss","Brier","AUC","Accuracy","LogLoss","Brier","AUC"),
+caption="Ridge (logistic) — Test Metrics (different seeds)") %>% kable_styling(full_width=FALSE,position="center",
+bootstrap_options=c("striped","hover","condensed")) %>% add_header_above(c(" " =1, "Run 1" =4, "Run 2" =4))
 ```
 
 
@@ -808,42 +480,35 @@ F Statistic & 2.967$^{***}$ (df = 12; 137) \\
 
 
 ```{r echo=FALSE}
-
-
-# Pretty table
-kable(comparison[ , -1], caption = "Comparison of LASSO Coefficients With and Without Standardization")
-```
-
-
-
-```{r echo=FALSE}
-# Display nicely
-knitr::kable(comparative_df, caption = "Variable selection across LASSO and Elastic Net")
-```
-
-```{r echo=FALSE}
-# Show the table
-knitr::kable(comparative_tbl, caption = "Variables Selected under λ.min vs λ.1se")
-
+kable(comparison[ , -1],caption="Comparison of LASSO Coefficients With and Without Standardization") # Pretty table
+knitr::kable(comparative_df,caption="Variable selection across LASSO and Elastic Net") # Display nicely
+knitr::kable(comparative_tbl, caption = "Variables Selected under λ.min vs λ.1se") # Show the table
 ```
 
 
 ## Appendix B
 
 ```{r, echo=FALSE, fig.width=8, fig.height=5, fig.cap="Residuals vs Fitted for all specifications"}
-print(gg_resfit)
-print(gg_qq)
-print(gg_scale)
+print(gg_resfit); print(gg_qq); print(gg_scale)
 ```
 
 
 
 ## Appendix C
-```{r, echo=FALSE, results='asis'}
-code_file <- knitr::purl("Assignment IDS.rmd", quiet = TRUE)
-code <- readLines(code_file, warn = FALSE)
-# Emit a proper fenced R code block so Pandoc treats it as verbatim
-knitr::asis_output(paste0("```r\n", paste(code, collapse = "\n"), "\n```\n"))
+```{r echo=FALSE, purl = FALSE, results='asis'}
+
+# One clean purl of the *current* document, with no knitr header comments
+this_doc  <- knitr::current_input()
+code_path <- knitr::purl(this_doc, documentation = 0, quiet = TRUE)
+code      <- readLines(code_path, warn = FALSE)
+
+# Print compactly (small font) without any chunk headers
+knitr::asis_output(paste0(
+  "\\begingroup\\footnotesize\n```r\n",
+  paste(code, collapse = "\n"),
+  "\n```\n\\endgroup\n"
+))
+
 ```
 
 
