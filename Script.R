@@ -209,18 +209,18 @@ dfm_test <- data_clean[-idx, ]
 # Lets show how it changes depending on wheter you standarize or not. 
 
 # Form of out model. 
-# form <- gdp_growth ~ 
-#   electricity_access_log + 
-#   age_dependency_ratio +
-#   credit_info_index +
-#   labor_force_total +
-#   emp_agriculture_total_log +
-#   emp_industry_total +
-#   emp_services_total +
-#   employers_total_log +
-#   pop_growth +      
-#   pop_total_log +
-#   urban_pop_pct
+ form <- gdp_growth ~ 
+   electricity_access_log + 
+   age_dependency_ratio +
+   credit_info_index +
+   labor_force_total +
+   emp_agriculture_total_log +
+   emp_industry_total +
+   emp_services_total +
+   employers_total_log +
+   pop_growth +      
+   pop_total_log +
+   urban_pop_pct
 
 ctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3,
                      savePredictions = "final")
