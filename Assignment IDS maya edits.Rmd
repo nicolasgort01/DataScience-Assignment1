@@ -1,0 +1,52 @@
+---
+title: "Determinants of economic growth: Insights from demographics, labor markets, and international trade"
+author: |
+  | Maya Archer 623099 (xx%), Nicolas Gonzalez Gort 780037 (xx%)
+  | Rishi Ashok Kumar 560527 (xx%), Saumya Bothra 595402 (xx%)
+date: "September, 2025"
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{makecell}
+output:
+  pdf_document:
+subtitle: FEM11149 - Introduction to Data Science
+editor_options:
+  chunk_output_type: inline
+urlcolor: blue
+linkcolor: red
+---
+
+
+# Introduction
+
+Economic growth is commonly defined as the sustained increase in real Gross Domestic Product (GDP), reflecting a country's ability to expand production, improve living standards, and maintain long-term development. Forecasts of Gross Domestic Product (GDP) growth are crucial for policymakers, researchers, and international organizations, as they inform fiscal policy, trade negotiations, and borrowing decisions. For instance, governments may finance higher expenditure through debt, but the sustainability of such debt ultimately depends on the economy's future growth potential. Classical models, such as Solow's growth theory, explain how long-term economic growth can be achieved through technological advancements, labor force growth, and capital accumulation. The Demographic Transition Model (DTM) describes how declining mortality and fertility rates affect population structures, which in turn impact economic growth. Meanwhile, the open-economy theory highlights international trade as a potential driver of growth. Identifying the determinants of GDP growth is important for testing existing theoretical predictions, as well as for designing effective policies that foster sustainable development and macroeconomic stability. 
+
+Building on this motivation, the central research question guiding this analysis is: **To what extent can economic and demographic variables, such as trade balance, unemployment, and population characteristics, be used to predict GDP growth?** Investigating this question is significant because it clarifies the structural factors that shape economic performance and provides a foundation for more accurate forecasting. A better understanding of these relationships enables policymakers to anticipate risks, develop sustainable fiscal strategies, and allocate resources more efficiently. It may also aid in reducing misallocation of resources, where funds are directed toward ineffective or low-impact policies rather than those that promote sustainable, long-term growth.
+
+# Data 
+
+The analysis is based on the data obtained from the *World Bank’s Global Jobs Indicators Database* and *Balance of Payments statistics*. The dataset consists of 73 variables that capture information on widely used macroeconomic and demographic indicators from 150 countries. The target variable is GDP growth, a measure of economic performance. The data includes explanatory variables like trade balance, unemployment, net trade in goods and services, labor force participation, and population characteristics. Most of these are expressed as percentages or ratios, ensuring consistency and reducing the need for additional transformations prior to analysis. For example, the trade balance is measured as a share of GDP, while unemployment is expressed as a percentage of the labor force.
+
+Simple descriptive statistics illustrate the variation across economies. On average, the annual GDP growth rate is 2.6%, but country-level outcomes vary widely, ranging from severe contractions of over –34.3% to strong expansions of more than 13%. The average unemployment rate is 8.1%, with some countries experiencing very low rates (close to 0.2%) while others face levels above 27%. Population growth is generally positive, averaging at 1.4%, but ranges from slight declines (–1.9%) to rapid expansions exceeding 5% per year.
+
+By combining macroeconomic indicators with demographic and labor market measures, the dataset offers a broad overview of the potential drivers of GDP growth. Its cross-country coverage enables the identification of structural patterns and relationships that can inform both policy and strategic decision-making. While the dataset does not capture every possible determinant of growth, it offers a sufficiently comprehensive view to support meaningful insights into the how different factors contribute to growth performance across countries. 
+
+# Methods 
+
+Regression analysis is a widely used statistical technique for examining how a dependent variable changes based on one or more explanatory variables. This is particularly useful in economic contexts, where the goal is often to predict the quantitative impact of multiple structural and demographic factors on a country’s performance. The standard approach, Ordinary Least Squares (OLS), estimates coefficients by minimizing the squared differences between observed and predicted values. In its general form, an OLS regression can be expressed as $y_i = \beta_0 + \beta_1 x_{i1} + \dots + \beta_k x_{ik} + \varepsilon_i$, where $y_i$ is the dependent variable, $x_{ij}$ are the explanatory variables, $\beta_j$ are coefficients, and $\varepsilon_i$ is the error term. OLS relies on assumptions such as linearity of relationships, independence of errors, homoscedasticity (constant variance of errors), and the absence of perfect multicollinearity among explanatory variables. In practice, economic and demographic data often challenge these assumptions, leading to weakened interpretability and predictive accuracy. For example, variables such as unemployment, labor participation, and population growth may be correlated, leading to multicollinearity that inflates standard errors and undermines the reliability of coefficient estimates.
+
+Penalized regression methods aim to solve this issue by adding a penalty term to the absolute size of the coefficient estimates, shrinking them towards zero. The LASSO regression (Least Absolute Shrinkage and Selection Operator) in particular uses an $L_1$ penalty, which stabilizes estimation and performs variable selection by setting some coefficients exactly to zero instead of fitting all available predictors. Mathematically, LASSO minimizes the sum of squared errors plus a penalty term, expressed as $\min_{\beta} \sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda \sum_{j=1}^p |\beta_j|$, where $\lambda$ controls the strength of the penalty. Larger values of $\lambda$ produce simpler models with fewer predictors, while smaller values allow more variables to remain in the model. Ridge regression applies an $L_2$ penalty, minimizing the sum of squared residuals plus $\lambda \sum_j \beta_j^2$, which also shrinks the coefficients towards zero but does not remove them entirely. This makes Ridge useful when dealing with many correlated predictors, as it distributes the effect across them instead of excluding variables. Elastic Net addresses this by blending the $L_1$ and $L_2$ penalties into one objective, $\min_{\beta} \sum_{i=1}^n (y_i - \hat{y}_i)^2 + \lambda \left[ \alpha \sum_{j=1}^p |\beta_j| + (1-\alpha) \sum_{j=1}^p \beta_j^2 \right]$, where $\alpha \in [0,1]$ controls the balance between LASSO and Ridge. This flexibility makes Elastic Net particularly effective when predictors are highly correlated, as it can select groups of variables together while still maintaining shrinkage for stability.
+
+For model diagnostics, the main concern is predictive power rather than just achieving the best in-sample fit. While the coefficient of determination ($R^2$) provides an indication of how much of the variation in the dependent variable is explained, a high $R^2$ does not necessarily indicate strong predictive accuracy. To avoid overfitting, penalized regressions rely on cross-validation, which evaluates how well the model generalizes to unseen data. The performance of each model is typically assessed using a loss function, most commonly the mean squared error (MSE) or the mean absolute error (MAE). Based on this evaluation, two values of the penalty parameter $\lambda$ are often reported: $\lambda_{min}$, which minimizes the chosen prediction error, and $\lambda_{1se}$, which selects a simpler model where its error is within one standard error of the minimum. 
+
+While $\lambda_{min}$ achieves the lowest estimated prediction error, it can sometimes result in overfitting by tailoring the model too closely to the specific folds of the cross-validation procedure. This can reduce stability and limit the model’s ability to generalize to new data, effectively capturing both noise and signal. The “1-SE rule” mitigates this risk by selecting the largest $\lambda$ within one standard error of the minimum error. This approach yields a simpler and more parsimonious model, trading a very small loss in accuracy for improved robustness and generalizability. In practice, the stability of cross-validation also depends on how the folds are generated. Setting a random seed (e.g., using `set.seed()` in R) ensures that results are reproducible, since different random splits of the data can otherwise lead to slightly different values of $\lambda_{min}$ and $\lambda_{1se}$. Using different seeds can therefore yield different models, especially when predictors are highly correlated, which highlights the importance of interpreting the results with caution and relying on methods that improve stability, such as Elastic Net. For this reason, results should not be viewed as exact, but rather as indicators of broader economic patterns.
+
+Together, LASSO and Elastic Net provide a powerful framework for analyzing high-dimensional economic data. LASSO highlights the most relevant drivers of the dependent variable, while Elastic Net improves stability when predictors are correlated. By applying these methods, it becomes possible to balance interpretability and predictive accuracy, ensuring that the resulting models are both theoretically informative and practically useful.
+
+# Results 
+
+
+
+
+
+
