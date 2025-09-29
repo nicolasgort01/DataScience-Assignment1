@@ -31,7 +31,7 @@ pacman::p_load(
 options(scipen = 999)
 rm(list = ls())
 # Read data
-df <- readr::read_csv("Data/a1_data_group_9.csv", show_col_types = FALSE)
+df <- readr::read_csv("~/Desktop/Group Assignment 1 IDS /a1_data_group_9.csv", show_col_types = FALSE)
 ```
 
 
@@ -112,7 +112,6 @@ x="Fitted values",y="Sqrt(|Standardized Residuals|)")+theme_minimal() #Scale-Loc
 
 
 
-
 ```{r include=FALSE}
 # LASSO Regression
 X_lasso <- model.matrix(`GDP growth (annual %)`~`Fertility rate, total (births per woman)`+`Employers, total (% of total employment) (modeled ILO estimate)`+
@@ -128,7 +127,7 @@ set.seed(2354245);cv_lasso_nl_int<-cv.glmnet(X_lasso,y_lasso,alpha = 1,nfolds = 
 cv_lasso_nl_int$lambda.min;cv_lasso_nl_int$lambda.1se
 coef(cv_lasso_nl_int, s = "lambda.min");coef(cv_lasso_nl_int, s = "lambda.1se")
 ```
-As a robustness check, the model was re-estimated with LASSO. At the CV minimum ($\lambda_{min}$) it attached a moderate penalty to employment, life expectancy, unemployment, export value, and GDP per capita, shrinking the rest to zero due to their limited predictive power. At the stronger penalty ($\lambda_{1se}$), it shrunk toward the intercept (average growth rate) implying that the data does not support many predictors. Compared with OLS, LASSO isolates true drivers and removes noise, yielding a simpler, more stable model with similar accuracy and lower overfitting risk.
+As a robustness check, the model was re-estimated with LASSO. At the CV minimum ($\lambda_{min}$) it attached a moderate penalty to employment, life expectancy, unemployment, export value, and GDP per capita, shrinking the rest to zero due to their limited predictive power. At the stronger penalty ($\lambda_{1se}$), it shrunk toward the intercept (average growth rate), meaning the data supports few predictors. Compared to OLS, LASSO isolates true drivers and removes noise, yielding a simpler, more stable model with similar accuracy and lower overfitting.
 
 Standardizing predictors is essential for LASSO because the penalty acts on coefficient size. Putting variables on a common scale makes the penalty fair, so only informative predictors are retained. Without standardization, large-unit variables would be over penalized and coefficients can shrink to zero. Table 1 shows with standardization only meaningful predictors remain.
 
@@ -182,7 +181,7 @@ pred_base <- rep(mean(Yvar_train), length(Yvar_test)) # Baseline (mean)
 met_base  <- row_metrics("Baseline (mean of train)", Yvar_test, pred_base)
 ```
 
-Cross-validation for Elastic Net selected a mixing parameter of $\alpha$ = 0.4, blending LASSO (selection) and Ridge (shrinkage) with a slight tilt toward the Ridge model. The penalties were $\lambda_{min}$ = 0.3163 with a minimized mean squared error and $\lambda_{1se}$ = 2.2320 for a more parsimonious model. Compared to LASSO, Elastic Net is more stable under collinearity, shrinking groups of related predictors rather than arbitrarily picking one. In the given data set this is helpful given the correlated labor and demographic variables. In practice, it offers a robust compromise with a  similar accuracy to LASSO, better group retention, and improved generalization.
+Cross-validation for Elastic Net selected a mixing parameter of $\alpha$ = 0.4, blending LASSO and Ridge with a slight tilt toward the Ridge model. The penalties were $\lambda_{min}$ = 0.3163 with a minimized mean squared error and $\lambda_{1se}$ = 2.2320 for a more parsimonious model. Compared to LASSO, Elastic Net is more stable under collinearity, shrinking groups of related predictors rather than arbitrarily picking one. This is helpful given the correlated labor and demographic variables. In practice, it offers a robust compromise with a  similar accuracy to LASSO, better group retention, and improved generalization.
 
 ```{r include=FALSE}
 # ELASTIC NET, grid search for alpha and training the model
